@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ pharmacy.name }}{% endblock %}
+
+{% block content %}
+<div class="pharmacy-header" style="border-bottom: 5px solid {{ pharmacy.color }};">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1>
+                <i class="{{ pharmacy.logo }}" style="color: {{ pharmacy.color }};"></i>
+                {{ pharmacy.name }}
+            </h1>
+            <p class="lead">
+                <i class="fas fa-map-marker-alt me-2"></i>{{ pharmacy.address }} | 
+                <i class="fas fa-phone me-2"></i>{{ pharmacy.phone }}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm my-4">
+    <div class="card-body">
+        <form action="{{ url_for('pharmacy', pharmacy_id=pharmacy_id) }}" method="get" class="row g-3">
+            <!-- Category Filter -->
+            <div class="col-md-4">
+                <label for="category" class="form-label">Category</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Search Filter -->
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" name="search" id="search" class="form-control" placeholder="Search products..." value="{{ search_query }}">
+            </div>
+            
+            <!-- Availability Filter -->
+            <div class="col-md-3">
+                <label for="availability" class="form-label">Availability</label>
+                <select name="availability" id="availability" class="form-select">
+                    <option value="">All Products</option>
+                    <option value="in_stock" {% if selected_availability == 'in_stock' %}selected{% endif %}>In Stock</option>
+                    <option value="out_of_stock" {% if selected_availability == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
+                </select>
+            </div>
+            
+            <!-- Filter Button -->
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Product List -->
+<div class="row">
+    {% if pharmacy.products|length > 0 %}
+        {% for product in pharmacy.products %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100 product-detail-card">
+                <div class="card-header" style="background-color: {{ pharmacy.color }}20;">
+                    <h5 class="card-title mb-0">{{ product.name }}</h5>
+                    <span class="category-badge">{{ product.category }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ product.description }}</p>
+                    <div class="product-info">
+                        <div class="info-item">
+                            <span class="label">Price:</span>
+                            <span class="value price">${{ "%.2f"|format(product.price) }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Unit:</span>
+                            <span class="value">{{ product.unit }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Status:</span>
+                            <span class="value">
+                                {% if product.in_stock %}
+                                <span class="badge bg-success">In Stock ({{ product.stock_quantity }})</span>
+                                {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('compare', product1=product.id, pharmacy1=pharmacy_id) }}" class="btn btn-outline-accent w-100">
+                        <i class="fas fa-balance-scale me-2"></i>Compare with Other Pharmacy
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No products found matching your criteria. Try adjusting your filters.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

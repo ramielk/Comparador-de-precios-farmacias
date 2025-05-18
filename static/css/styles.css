@@ -1,0 +1,224 @@
+:root {
+    --primary: #009B77;      /* pharmacy green */
+    --secondary: #4A90E2;    /* medical blue */
+    --background: #F8F9FA;   /* light grey */
+    --text: #333333;         /* dark grey */
+    --accent: #E74C3C;       /* highlight red */
+    --light-grey: #e9ecef;
+    --card-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    --spacing: 16px;
+}
+
+/* Base Styles */
+body {
+    font-family: 'Nunito', 'Roboto', sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Navbar Styling */
+.navbar-dark.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* Card Styling */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: var(--card-shadow);
+    border: none;
+    margin-bottom: var(--spacing);
+}
+
+.card-title {
+    font-weight: 600;
+}
+
+/* Pharmacy Cards */
+.pharmacy-card {
+    transition: transform 0.2s;
+}
+
+.pharmacy-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Product Cards */
+.product-card {
+    padding: 0.5rem;
+    transition: all 0.2s;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.product-card .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.product-card .price {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.product-card .unit {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.category-badge {
+    display: inline-block;
+    background-color: var(--light-grey);
+    color: var(--text);
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Detailed Product Cards */
+.product-detail-card .card-header {
+    border-bottom: none;
+    padding: 1rem;
+}
+
+.product-detail-card .card-body {
+    padding: 1rem;
+}
+
+.product-info {
+    margin-top: 1rem;
+}
+
+.product-info .info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--light-grey);
+}
+
+.product-info .info-item:last-child {
+    border-bottom: none;
+}
+
+.product-info .label {
+    font-weight: 600;
+}
+
+.product-info .price {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Pharmacy Header */
+.pharmacy-header {
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #008566;
+    border-color: #008566;
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.btn-secondary:hover, .btn-secondary:focus {
+    background-color: #3A80D2;
+    border-color: #3A80D2;
+}
+
+.btn-accent {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.btn-accent:hover, .btn-accent:focus {
+    background-color: #D73C2C;
+    border-color: #D73C2C;
+    color: white;
+}
+
+.btn-outline-accent {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-outline-accent:hover, .btn-outline-accent:focus {
+    background-color: var(--accent);
+    color: white;
+}
+
+/* Product Comparison */
+.product-comparison-card {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    margin-top: 1rem;
+}
+
+.comparison-table th {
+    background-color: var(--light-grey);
+}
+
+.recommendation-box {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border-left: 5px solid var(--primary);
+}
+
+/* Footer */
+.footer {
+    border-top: 1px solid #dee2e6;
+    margin-top: 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .pharmacy-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .pharmacy-header .lead {
+        font-size: 1rem;
+    }
+    
+    .product-info .info-item {
+        flex-direction: column;
+    }
+}

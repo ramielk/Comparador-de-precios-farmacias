@@ -1,11 +1,16 @@
 :root {
-    --primary: #009B77;      /* pharmacy green */
-    --secondary: #4A90E2;    /* medical blue */
-    --background: #F8F9FA;   /* light grey */
-    --text: #333333;         /* dark grey */
-    --accent: #E74C3C;       /* highlight red */
+    --primary: #009B77;
+    /* pharmacy green */
+    --secondary: #4A90E2;
+    /* medical blue */
+    --background: #F8F9FA;
+    /* light grey */
+    --text: #333333;
+    /* dark grey */
+    --accent: #E74C3C;
+    /* highlight red */
     --light-grey: #e9ecef;
-    --card-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    --card-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
     --spacing: 16px;
 }
 
@@ -17,7 +22,12 @@ body {
     line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: 'Roboto', sans-serif;
     font-weight: 700;
     color: var(--text);
@@ -59,12 +69,12 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.5rem;
     transition: all 0.2s;
     border-radius: 0.5rem;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .product-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .product-card .card-title {
@@ -143,7 +153,8 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--primary);
 }
 
-.btn-primary:hover, .btn-primary:focus {
+.btn-primary:hover,
+.btn-primary:focus {
     background-color: #008566;
     border-color: #008566;
 }
@@ -153,7 +164,8 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--secondary);
 }
 
-.btn-secondary:hover, .btn-secondary:focus {
+.btn-secondary:hover,
+.btn-secondary:focus {
     background-color: #3A80D2;
     border-color: #3A80D2;
 }
@@ -164,7 +176,8 @@ h1, h2, h3, h4, h5, h6 {
     color: white;
 }
 
-.btn-accent:hover, .btn-accent:focus {
+.btn-accent:hover,
+.btn-accent:focus {
     background-color: #D73C2C;
     border-color: #D73C2C;
     color: white;
@@ -175,7 +188,8 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--accent);
 }
 
-.btn-outline-accent:hover, .btn-outline-accent:focus {
+.btn-outline-accent:hover,
+.btn-outline-accent:focus {
     background-color: var(--accent);
     color: white;
 }
@@ -187,6 +201,8 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #f8f9fa;
     margin-top: 1rem;
 }
+
+.img-fluid {}
 
 .comparison-table th {
     background-color: var(--light-grey);
@@ -209,15 +225,15 @@ h1, h2, h3, h4, h5, h6 {
     .navbar-brand {
         font-size: 1.2rem;
     }
-    
+
     .pharmacy-header h1 {
         font-size: 1.75rem;
     }
-    
+
     .pharmacy-header .lead {
         font-size: 1rem;
     }
-    
+
     .product-info .info-item {
         flex-direction: column;
     }

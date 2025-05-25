@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_development")
 
-# Main route - displays both pharmacies
+# Main route - displays both pharmacies  
 @app.route('/')
 def index():
     pharmacy_data = get_pharmacy_data()

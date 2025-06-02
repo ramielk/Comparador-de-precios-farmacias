@@ -91,6 +91,12 @@
                     <a href="{{ url_for('compare', product1=product.id, pharmacy1=pharmacy_id) }}" class="btn btn-outline-accent w-100">
                         <i class="fas fa-balance-scale me-2"></i>Comparar con Otra Farmacia
                     </a>
+                    <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy_id, product_id=producto.id) }}" method="post" style="display:inline;">
+                     <button type="submit">Agregar al carrito</button>
+                      </form>
+                      <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy_id, product_id=producto.id) }}" method="post" style="display:inline;">
+                          <button type="submit">Quitar del carrito</button>
+                       </form>
                 </div>
             </div>
         </div>

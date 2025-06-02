@@ -10,6 +10,25 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_development")
 
+# ---- Carrito de compras ----
+def add_to_cart(product_id, pharmacy_id):
+    cart = session.get('cart', {})
+    key = f'{pharmacy_id}:{product_id}'
+    if key in cart:
+        cart[key] += 1
+    else:
+        cart[key] = 1
+    session['cart'] = cart
+
+def remove_from_cart(product_id, pharmacy_id):
+    cart = session.get('cart', {})
+    key = f'{pharmacy_id}:{product_id}'
+    if key in cart:
+        cart[key] -= 1
+        if cart[key] <= 0:
+            del cart[key]
+    session['cart'] = cart
+    
 # Main route - displays both pharmacies  
 @app.route('/')
 def index():
@@ -56,6 +75,15 @@ def pharmacy(pharmacy_id):
                           search_query=search_query,
                           selected_availability=availability,
                           active_page=pharmacy_id)
+@app.route('/add_to_cart/<pharmacy_id>/<product_id>', methods=['POST'])
+def add_cart_route(pharmacy_id, product_id):
+    add_to_cart(product_id, pharmacy_id)
+    return redirect(request.referrer or url_for('index'))
+
+@app.route('/remove_from_cart/<pharmacy_id>/<product_id>', methods=['POST'])
+def remove_cart_route(pharmacy_id, product_id):
+    remove_from_cart(product_id, pharmacy_id)
+    return redirect(request.referrer or url_for('index'))
 
 # Product comparison route
 @app.route('/compare')

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Inicio{% endblock %}
+{% block title %}Inicio de Comparación de Farmacias{% endblock %} {# CAMBIO 1: Título más descriptivo #}
 
 {% block content %}
 <div class="row mb-4">
@@ -16,9 +16,8 @@
 </div>
 
 <div class="row">
-    <!-- Farmacia 1 -->
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy1.color }}';">
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid {{ pharmacy1.color }};"> {# CAMBIO 2: Eliminadas comillas simples #}
             <div class="card-body"
                 style="border-color: #072d5e; border-style: solid; border-width: thick;border-radius: inherit;">
                 <div class="text-center mb-3">
@@ -42,6 +41,7 @@
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
                             </div>
+                            {# No se añaden botones de carrito aquí, ya que es solo una vista previa #}
                         </div>
                     </div>
                     {% endfor %}
@@ -56,9 +56,8 @@
         </div>
     </div>
 
-    <!-- Farmacia 2 -->
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy2.color }}';">
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid {{ pharmacy2.color }};"> {# CAMBIO 3: Eliminadas comillas simples #}
             <div class="card-body"
                 style="border-color: #b32715; border-style: solid; border-width: thick; border-radius: inherit;">
                 <div class="text-center mb-3">
@@ -82,6 +81,7 @@
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
                             </div>
+                            {# No se añaden botones de carrito aquí, ya que es solo una vista previa #}
                         </div>
                     </div>
                     {% endfor %}

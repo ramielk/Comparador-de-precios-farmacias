@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 
-{% block title %}EcoFarmacia - Farmatodo{% endblock %}
+{% block title %}EcoFarmacia - {{ pharmacy.name }}{% endblock %}
 
 {% block content %}
-<div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy.color }}';">
+<div class="pharmacy-header" style="border-bottom: 5px solid {{ pharmacy.color }};"> {# ¡CAMBIO 1: Eliminadas comillas simples alrededor de {{ pharmacy.color }}! #}
     <div class="row align-items-end">
         <div class="text-md-end">
             <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
@@ -13,11 +13,9 @@
     </div>
 </div>
 
-<!-- Filtros -->
 <div class="card shadow-sm my-4">
     <div class="card-body">
         <form action="{{ url_for('pharmacy', pharmacy_id=pharmacy_id) }}" method="get" class="row g-3">
-            <!-- Filtro de Categoría -->
             <div class="col-md-4">
                 <label for="category" class="form-label">Categoría</label>
                 <select name="category" id="category" class="form-select">
@@ -28,13 +26,11 @@
                 </select>
             </div>
             
-            <!-- Filtro de Búsqueda -->
             <div class="col-md-4">
                 <label for="search" class="form-label">Buscar</label>
                 <input type="text" name="search" id="search" class="form-control" placeholder="Buscar productos..." value="{{ search_query }}">
             </div>
             
-            <!-- Filtro de Disponibilidad -->
             <div class="col-md-3">
                 <label for="availability" class="form-label">Disponibilidad</label>
                 <select name="availability" id="availability" class="form-select">
@@ -44,7 +40,6 @@
                 </select>
             </div>
             
-            <!-- Botón de Filtrar -->
             <div class="col-md-1 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="fas fa-filter"></i>
@@ -54,13 +49,12 @@
     </div>
 </div>
 
-<!-- Lista de Productos -->
 <div class="row">
     {% if pharmacy.products|length > 0 %}
         {% for product in pharmacy.products %}
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100 product-detail-card">
-                <div class="card-header" style="background-color: '{{ pharmacy.color }}20';">
+                <div class="card-header" style="background-color: {{ pharmacy.color }}20;"> {# ¡CAMBIO 2: Eliminadas comillas simples alrededor de {{ pharmacy.color }}! #}
                     <h5 class="card-title mb-0">{{ product.name }}</h5>
                     <span class="category-badge">{{ product.category }}</span>
                 </div>
@@ -87,16 +81,18 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <a href="{{ url_for('compare', product1=product.id, pharmacy1=pharmacy_id) }}" class="btn btn-outline-accent w-100">
+                <div class="card-footer d-flex flex-column align-items-center"> {# ¡CAMBIO 3: Ajuste de estilos para el footer! #}
+                    <a href="{{ url_for('compare', product1=product.id, pharmacy1=pharmacy_id) }}" class="btn btn-outline-primary w-100 mb-2"> {# ¡CAMBIO 4: Cambié btn-outline-accent por btn-outline-primary y agregué mb-2! #}
                         <i class="fas fa-balance-scale me-2"></i>Comparar con Otra Farmacia
                     </a>
-                    <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy_id, product_id=producto.id) }}" method="post" style="display:inline;">
-                     <button type="submit">Agregar al carrito</button>
-                      </form>
-                      <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy_id, product_id=producto.id) }}" method="post" style="display:inline;">
-                          <button type="submit">Quitar del carrito</button>
-                       </form>
+                    <div class="d-flex w-100 justify-content-around"> {# Contenedor para los botones de carrito #}
+                        <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy_id, product_id=product.id) }}" method="post" style="display:inline;"> {# ¡CAMBIO 5: CORREGIDO producto.id a product.id! #}
+                           <button type="submit" class="btn btn-sm btn-success">Agregar</button> {# ¡CAMBIO 6: Botones de carrito con estilos y texto conciso! #}
+                        </form>
+                        <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy_id, product_id=product.id) }}" method="post" style="display:inline;"> {# ¡CAMBIO 7: CORREGIDO producto.id a product.id! #}
+                            <button type="submit" class="btn btn-sm btn-danger">Quitar</button> {# ¡CAMBIO 8: Botones de carrito con estilos y texto conciso! #}
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

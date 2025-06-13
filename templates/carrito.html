@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block title %}Tu Carrito de Compras{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="card-title text-center mb-4">Tu Carrito de Compras</h1>
+                <p class="lead text-center">Aquí puedes revisar los productos que has agregado de diferentes farmacias.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if cart_items %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                Detalle del Carrito
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for item in cart_items %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ item.product_name }}</strong> <br>
+                        <small>De: {{ item.pharmacy_name }}</small><br>
+                        <small>Cantidad: {{ item.quantity }} x ${{ "%.2f"|format(item.price) }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="fw-bold">${{ "%.2f"|format(item.item_total) }}</span>
+                        <div class="d-flex mt-2">
+                            <form action="{{ url_for('add_cart_route', pharmacy_id=item.pharmacy_id, product_id=item.product_id) }}" method="post" class="me-2">
+                                <button type="submit" class="btn btn-sm btn-success">+</button>
+                            </form>
+                            <form action="{{ url_for('remove_cart_route', pharmacy_id=item.pharmacy_id, product_id=item.product_id) }}" method="post">
+                                <button type="submit" class="btn btn-sm btn-danger">-</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+                <li class="list-group-item d-flex justify-content-between align-items-center bg-light fw-bold">
+                    Total:
+                    <span>${{ "%.2f"|format(total_price) }}</span>
+                </li>
+            </ul>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-primary me-2">
+                <i class="fas fa-shopping-basket me-2"></i>Seguir Comprando
+            </a>
+            <button type="button" class="btn btn-success">
+                <i class="fas fa-money-check-alt me-2"></i>Proceder al Pago (Funcionalidad pendiente)
+            </button>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info text-center mt-4">
+    <i class="fas fa-info-circle me-2"></i>Tu carrito está vacío. ¡Agrega algunos productos!
+    <br><br>
+    <a href="{{ url_for('index') }}" class="btn btn-info">Ir a la página principal</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,298 +1,139 @@
 {% extends "layout.html" %}
 
-{% block title %}EcoFarmacia - Farmahorro{% endblock %}
+{% block title %}Comparar Productos{% endblock %} {# CAMBIO 1: Título más descriptivo #}
 
 {% block content %}
-<div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy1.color }}';">
-    <div class="row align-items-end">
-        <div class="text-md-end">
-            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
-            </a>
-        </div>
-    </div>
-</div>
-
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body">
-                <h1 class="card-title text-center">Comparación de Productos</h1>
-                <p class="lead text-center">Compara productos entre farmacias para encontrar la mejor opción para ti.
-                </p>
+                <h1 class="card-title text-center mb-4">Comparación de Inventario de Farmacias</h1>
+                <p class="lead text-center">Compara la disponibilidad y precios de productos entre dos farmacias para
+                    encontrar la mejor opción para tus necesidades.</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-4 align-items-center">
-    <!-- Selección del Primer Producto -->
-    <div class="col-md-6 mb-3">
-        <div class="card shadow-sm h-100" style="border-top: 5px solid '{{ pharmacy1.color }}';">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">
-                    <div class="text-center mb-3">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Farmatodo_logo.svg/1200px-Farmatodo_logo.svg.png"
-                            alt="Farmatodo" class="img-fluid rounded shadow-sm" style="max-height: 150px; max-width: 100%; object-fit: contain;">
-                    </div>
-
-                </h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ url_for('compare') }}" method="get" id="product1-form">
-                    <!-- Mantener producto2 y farmacia2 si existen -->
-                    {% if product2 %}
-                    <input type="hidden" name="product2" value="{{ product2.id }}">
-                    {% endif %}
-                    <input type="hidden" name="pharmacy1" value="{{ pharmacy1_id }}">
-                    <input type="hidden" name="pharmacy2" value="{{ pharmacy2_id }}">
-
-                    <div class="mb-3">
-                        <label for="product1" class="form-label">Selecciona Producto</label>
-                        <select name="product1" id="product1" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Selecciona un producto --</option>
-                            {% for p in pharmacy1.products %}
-                            <option value="{{ p.id }}" {% if product1 and product1.id==p.id %}selected{% endif %}>
-                                {{ p.name }} ({{ p.category }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </form>
-
-                {% if product1 %}
-                <div class="product-comparison-card">
-                    <h4>{{ product1.name }}</h4>
-                    <span class="category-badge">{{ product1.category }}</span>
-                    <p class="mt-3">{{ product1.description }}</p>
-
-                    <div class="product-info">
-                        <div class="info-item">
-                            <span class="label">Precio:</span>
-                            <span class="value price">${{ "%.2f"|format(product1.price) }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Unidad:</span>
-                            <span class="value">{{ product1.unit }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Estado:</span>
-                            <span class="value">
-                                {% if product1.in_stock %}
-                                <span class="badge bg-success">En Stock ({{ product1.stock_quantity }})</span>
-                                {% else %}
-                                <span class="badge bg-danger">Agotado</span>
-                                {% endif %}
-                            </span>
-                        </div>
-                    </div>
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy1.color }}';"> {# CAMBIO 2: Eliminadas comillas simples #}
+            <div class="card-body"
+                style="border-color: #072d5e; border-style: solid; border-width: thick;border-radius: inherit;">
+                <div class="text-center mb-3">
+                    <img src="https://somoscomunidad.org.ve/wp-content/uploads/2017/08/Logo-Farmatodo.jpg"
+                        alt="Farmatodo" class="img-fluid" style="max-height: 250px;">
                 </div>
-                {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
-                    <p>Por favor selecciona un producto para comparar</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
 
-    <!-- Selección del Segundo Producto -->
-    <div class="col-md-6 mb-3">
-        <div class="card shadow-sm h-100" style="border-top: 5px solid '{{ pharmacy2.color }}';">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">
-                    <div class="text-center mb-3">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Farmahorro_logo.png"
-                            alt="Farmahorro" class="img-fluid rounded shadow-sm" style="max-height: 150px; max-width: 100%; object-fit: contain;">
-                    </div>
-                </h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ url_for('compare') }}" method="get" id="product2-form">
-                    <!-- Mantener producto1 y farmacia1 si existen -->
+                <h3 class="mb-3">Productos Destacados</h3>
+                <div class="row">
+                    {# Asegúrate de que product1 esté definido y sea un diccionario si lo vas a usar aquí #}
                     {% if product1 %}
-                    <input type="hidden" name="product1" value="{{ product1.id }}">
-                    {% endif %}
-                    <input type="hidden" name="pharmacy1" value="{{ pharmacy1_id }}">
-                    <input type="hidden" name="pharmacy2" value="{{ pharmacy2_id }}">
-
-                    <div class="mb-3">
-                        <label for="product2" class="form-label">Selecciona Producto</label>
-                        <select name="product2" id="product2" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Selecciona un producto --</option>
-                            {% for p in pharmacy2.products %}
-                            <option value="{{ p.id }}" {% if product2 and product2.id==p.id %}selected{% endif %}>
-                                {{ p.name }} ({{ p.category }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </form>
-
-                {% if product2 %}
-                <div class="product-comparison-card">
-                    <h4>{{ product2.name }}</h4>
-                    <span class="category-badge">{{ product2.category }}</span>
-                    <p class="mt-3">{{ product2.description }}</p>
-
-                    <div class="product-info">
-                        <div class="info-item">
-                            <span class="label">Precio:</span>
-                            <span class="value price">${{ "%.2f"|format(product2.price) }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Unidad:</span>
-                            <span class="value">{{ product2.unit }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Estado:</span>
-                            <span class="value">
-                                {% if product2.in_stock %}
-                                <span class="badge bg-success">En Stock ({{ product2.stock_quantity }})</span>
+                    <div class="col-md-12 mb-3">
+                        <div class="card h-100 product-card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product1.name }}</h5>
+                                <p class="card-text category-badge">{{ product1.category }}</p>
+                                <p class="card-text price">${{ "%.2f"|format(product1.price) }}</p>
+                                <p class="card-text unit">{{ product1.unit }}</p>
+                                {% if product1.in_stock %}
+                                <span class="badge bg-success">En Stock</span>
                                 {% else %}
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
-                            </span>
+                                {# Puedes añadir botones de carrito aquí si lo deseas, similar a pharmacy.html #}
+                                <div class="d-flex w-100 justify-content-around mt-2">
+                                    <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}" method="post" style="display:inline;">
+                                       <button type="submit" class="btn btn-sm btn-success">Agregar</button>
+                                    </form>
+                                    <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info">Selecciona un producto para comparar.</div>
+                    </div>
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
-                    <p>Por favor selecciona un producto para comparar</p>
+
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('pharmacy', pharmacy_id='pharmacy1') }}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>Ver Todos los Productos
+                    </a>
                 </div>
-                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy2.color }}';"> {# CAMBIO 3: Eliminadas comillas simples #}
+            <div class="card-body"
+                style="border-color: #b32715; border-style: solid; border-width: thick; border-radius: inherit;">
+                <div class="text-center mb-3">
+                    <img src="https://farmahorro.com.ve/wp-content/uploads/2023/09/farmahorro-brand.png"
+                        alt="Farmahorro" class="img-fluid" style="max-height: 250px;">
+                </div>
+
+                <h3 class="mb-3">Productos Destacados</h3>
+                <div class="row">
+                    {# Asegúrate de que product2 esté definido y sea un diccionario si lo vas a usar aquí #}
+                    {% if product2 %}
+                    <div class="col-md-12 mb-3">
+                        <div class="card h-100 product-card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product2.name }}</h5>
+                                <p class="card-text category-badge">{{ product2.category }}</p>
+                                <p class="card-text price">${{ "%.2f"|format(product2.price) }}</p>
+                                <p class="card-text unit">{{ product2.unit }}</p>
+                                {% if product2.in_stock %}
+                                <span class="badge bg-success">En Stock</span>
+                                {% else %}
+                                <span class="badge bg-danger">Agotado</span>
+                                {% endif %}
+                                {# Puedes añadir botones de carrito aquí si lo deseas, similar a pharmacy.html #}
+                                <div class="d-flex w-100 justify-content-around mt-2">
+                                    <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}" method="post" style="display:inline;">
+                                       <button type="submit" class="btn btn-sm btn-success">Agregar</button>
+                                    </form>
+                                    <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info">Selecciona un producto para comparar.</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('pharmacy', pharmacy_id='pharmacy2') }}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>Ver Todos los Productos
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Resultados de la Comparación -->
-{% if product1 and product2 %}
-<div class="row">
+<div class="row mt-4">
     <div class="col-12">
         <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <h3 class="mb-0">Resultados de la Comparación</h3>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table comparison-table">
-                        <thead>
-                            <tr>
-                                <th>Característica</th>
-                                <th>{{ pharmacy1.name }}</th>
-                                <th>{{ pharmacy2.name }}</th>
-                                <th>Diferencia</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Nombre del Producto</td>
-                                <td>{{ product1.name }}</td>
-                                <td>{{ product2.name }}</td>
-                                <td>{% if product1.name == product2.name %}Igual{% else %}Diferente{% endif %}</td>
-                            </tr>
-                            <tr>
-                                <td>Categoría</td>
-                                <td>{{ product1.category }}</td>
-                                <td>{{ product2.category }}</td>
-                                <td>{% if product1.category == product2.category %}Igual{% else %}Diferente{% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Precio</td>
-                                <td>${{ "%.2f"|format(product1.price) }}</td>
-                                <td>${{ "%.2f"|format(product2.price) }}</td>
-                                <td>
-                                    {% if product1.price > product2.price %}
-                                    <span class="text-danger">${{ "%.2f"|format(product1.price - product2.price) }} más
-                                        caro</span>
-                                    {% elif product1.price < product2.price %} <span class="text-success">${{
-                                        "%.2f"|format(product2.price - product1.price) }} más barato</span>
-                                        {% else %}
-                                        <span class="text-muted">Mismo precio</span>
-                                        {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Unidad</td>
-                                <td>{{ product1.unit }}</td>
-                                <td>{{ product2.unit }}</td>
-                                <td>{% if product1.unit == product2.unit %}Igual{% else %}Diferente{% endif %}</td>
-                            </tr>
-                            <tr>
-                                <td>Disponibilidad</td>
-                                <td>
-                                    {% if product1.in_stock %}
-                                    <span class="badge bg-success">En Stock ({{ product1.stock_quantity }})</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">Agotado</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if product2.in_stock %}
-                                    <span class="badge bg-success">En Stock ({{ product2.stock_quantity }})</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">Agotado</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if product1.in_stock and not product2.in_stock %}
-                                    <span class="text-success">Disponible solo en {{ pharmacy1.name }}</span>
-                                    {% elif not product1.in_stock and product2.in_stock %}
-                                    <span class="text-success">Disponible solo en {{ pharmacy2.name }}</span>
-                                    {% elif product1.in_stock and product2.in_stock %}
-                                    <span class="text-muted">Disponible en ambas</span>
-                                    {% else %}
-                                    <span class="text-danger">No disponible en ninguna farmacia</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Recomendación -->
-                <div class="recommendation-box p-3 mt-4">
-                    <h4><i class="fas fa-lightbulb me-2"></i>Recomendación</h4>
-
-                    {% if not product1.in_stock and not product2.in_stock %}
-                    <p>Ambos productos están actualmente agotados. Considera volver a consultar más tarde o buscar
-                        alternativas.</p>
-                    {% elif not product1.in_stock %}
-                    <p>Recomendamos comprar en {{ pharmacy2.name }} ya que es la única farmacia con este producto en
-                        stock.</p>
-                    {% elif not product2.in_stock %}
-                    <p>Recomendamos comprar en {{ pharmacy1.name }} ya que es la única farmacia con este producto en
-                        stock.</p>
-                    {% elif product1.price < product2.price %} <p>Recomendamos comprar en {{ pharmacy1.name }} ya que
-                        ofrece un mejor precio (${{ "%.2f"|format(product2.price - product1.price) }} más barato).</p>
-                        {% elif product2.price < product1.price %} <p>Recomendamos comprar en {{ pharmacy2.name }} ya
-                            que ofrece un mejor precio (${{ "%.2f"|format(product1.price - product2.price) }} más
-                            barato).</p>
-                            {% else %}
-                            <p>Ambas farmacias ofrecen este producto al mismo precio. Elige según conveniencia o stock
-                                disponible.</p>
-                            {% endif %}
-                </div>
+            <div class="card-body text-center">
+                <h3 class="mb-3">Volver al Inicio</h3>
+                <p>¿Quieres explorar más productos o ver las farmacias disponibles?</p>
+                <a href="{{ url_for('index') }}" class="btn btn-accent">
+                    <i class="fas fa-home me-2"></i>Ir al Inicio
+                </a>
             </div>
         </div>
     </div>
 </div>
-{% else %}
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-balance-scale fa-4x text-muted mb-3"></i>
-                <h4>Selecciona productos de ambas farmacias para ver una comparación</h4>
-                <p class="text-muted">La comparación te ayudará a encontrar la mejor opción según precio y
-                    disponibilidad</p>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
 {% endblock %}

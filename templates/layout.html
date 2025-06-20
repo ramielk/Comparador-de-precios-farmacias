@@ -1,4 +1,4 @@
-><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -50,7 +50,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('index') }}">
                             <i class="fas fa-home me-1"></i> Inicio
@@ -71,7 +71,6 @@
                             <i class="fas fa-balance-scale me-1"></i> Comparar
                         </a>
                     </li>
-                    {# ¡CAMBIO 2: Añadimos un enlace para ver el carrito con un contador de ítems! #}
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'cart' %}active{% endif %}" href="{{ url_for('view_cart') }}">
                             <i class="fas fa-shopping-cart me-1"></i> Carrito
@@ -80,6 +79,23 @@
                             {% endif %}
                         </a>
                     </li>
+                    
+                    <!-- NUEVO CÓDIGO DE AUTENTICACIÓN -->
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="nav-link">Hola, {{ current_user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Iniciar Sesión</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">Registrarse</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

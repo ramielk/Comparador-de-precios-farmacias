@@ -1,6 +1,15 @@
+from flask_talisman import Talisman
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import CSRFProtect
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from forms import RegistrationForm, LoginForm
+
 import logging
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, flash
 from pharmacy_data import get_pharmacy_data, get_product_by_id, get_categories, filter_products
 
 # Configure logging
@@ -8,7 +17,87 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Create Flask app
 app = Flask(__name__)
+
+# ======================================================================
+# CONFIGURACIÓN DE SEGURIDAD PRINCIPAL
+# ======================================================================
+
+# Configuración de seguridad - CLAVE SECRETA
 app.config['SECRET_KEY'] = os.environ.get("SESSION_SECRET", "una_clave_secreta_muy_dificil_de_adivinar_12345")
+
+# Configurar cookies seguras para protección adicional
+app.config.update(
+    SESSION_COOKIE_SECURE=True,     # Solo enviar cookies sobre HTTPS
+    SESSION_COOKIE_HTTPONLY=True,   # Prevenir acceso a cookies via JavaScript
+    SESSION_COOKIE_SAMESITE='Lax',  # Protección contra CSRF
+)
+
+# Habilitar protección CSRF global
+csrf = CSRFProtect(app)
+
+# Configurar cabeceras de seguridad HTTP con Flask-Talisman
+Talisman(
+    app,
+    content_security_policy={
+        'default-src': '\'self\'',
+        'style-src': ['\'self\'', 'https://cdn.jsdelivr.net', '\'unsafe-inline\''],
+        'script-src': ['\'self\'', 'https://cdn.jsdelivr.net', '\'unsafe-inline\''],
+        'font-src': ['\'self\'', 'https://cdn.jsdelivr.net', 'data:'],
+        'img-src': ['\'self\'', 'data:', 'https://somoscomunidad.org.ve', 'https://farmahorro.com.ve']
+    },
+    content_security_policy_nonce_in=['script-src'],
+    frame_options='SAMEORIGIN',
+    strict_transport_security=True,
+    force_https=False,  # Solo si estás detrás de un proxy HTTPS
+    session_cookie_http_only=True,  # CORRECCIÓN: http_only en lugar de httponly
+    session_cookie_secure=True
+)
+
+# Configurar protección contra fuerza bruta con Flask-Limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+
+# ======================================================================
+# CONFIGURACIÓN DE BASE DE DATOS
+# ======================================================================
+
+# Configuración de base de datos
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)  # Crear instancia de SQLAlchemy
+
+# Definición del modelo de usuario
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+
+# Configuración de login
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+# Cargador de usuario para Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Crear tablas en la base de datos
+def create_tables():
+    with app.app_context():
+        db.create_all()
+        print("¡Tablas creadas exitosamente!")
+
+# Inicializar la base de datos
+create_tables()
+
+# ======================================================================
+# FUNCIONALIDAD DE LA APLICACIÓN
+# ======================================================================
 
 # ---- Carrito de compras - Funciones de lógica ----
 def add_to_cart_logic(product_id, pharmacy_id):
@@ -33,6 +122,10 @@ def remove_from_cart_logic(product_id, pharmacy_id):
 def get_total_cart_items():
     cart = session.get('cart', {})
     return sum(cart.values())
+
+# ======================================================================
+# RUTAS DE LA APLICACIÓN
+# ======================================================================
 
 # Main route - displays both pharmacies  
 @app.route('/')
@@ -126,6 +219,7 @@ def remove_cart_route(pharmacy_id, product_id):
 
 # --- NUEVA RUTA PARA VER EL CARRITO (CAMBIO PRINCIPAL) ---
 @app.route('/cart')
+@login_required 
 def view_cart():
     cart = session.get('cart', {})
     pharmacy_data = get_pharmacy_data()
@@ -152,19 +246,15 @@ def view_cart():
                 })
             else:
                 flash(f"Error: Producto con ID {product_id} no encontrado en {pharmacy_data[pharmacy_id]['name']}. Podría haber sido eliminado.", 'error')
-                # Opcional: remover el ítem del carrito si el producto ya no existe
-                # del session['cart'][key] 
         else:
             flash(f"Error: Farmacia con ID {pharmacy_id} no encontrada para un ítem del carrito.", 'error')
-            # Opcional: remover el ítem del carrito si la farmacia ya no existe
-            # del session['cart'][key]
 
-    total_cart_items = get_total_cart_items() # Para el contador en el layout
+    total_cart_items = get_total_cart_items()
     return render_template('cart.html', 
                            cart_items=cart_items_details, 
                            total_price=total_price,
-                           total_cart_items=total_cart_items, # Variable para el layout
-                           active_page='cart') # Para que el menú se resalte
+                           total_cart_items=total_cart_items,
+                           active_page='cart')
 
 # Product comparison route
 @app.route('/compare')
@@ -196,6 +286,53 @@ def compare():
                             active_page='compare',
                             total_cart_items=total_cart_items)
 
+# ======================================================================
+# RUTAS DE AUTENTICACIÓN CON PROTECCIÓN ADICIONAL
+# ======================================================================
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        hashed_password = generate_password_hash(form.password.data)
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        flash('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html', title='Registro', form=form)
+
+@app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", error_message="Demasiados intentos. Por favor espera 1 minuto.")  # Protección contra fuerza bruta
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and check_password_hash(user.password, form.password.data):
+            login_user(user)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('index'))
+        else:
+            flash('Inicio de sesión fallido. Verifica email y contraseña', 'danger')
+    
+    return render_template('login.html', title='Iniciar Sesión', form=form)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+# ======================================================================
+# INICIO DE LA APLICACIÓN
+# ======================================================================
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-

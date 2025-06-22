@@ -41,12 +41,13 @@
                                 {% else %}
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
-                                {# Puedes añadir botones de carrito aquí si lo deseas, similar a pharmacy.html #}
                                 <div class="d-flex w-100 justify-content-around mt-2">
                                     <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}" method="post" style="display:inline;">
-                                       <button type="submit" class="btn btn-sm btn-success">Agregar</button>
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success">Agregar</button>
                                     </form>
                                     <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}" method="post" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
                                     </form>
                                 </div>
@@ -94,12 +95,13 @@
                                 {% else %}
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
-                                {# Puedes añadir botones de carrito aquí si lo deseas, similar a pharmacy.html #}
                                 <div class="d-flex w-100 justify-content-around mt-2">
                                     <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}" method="post" style="display:inline;">
-                                       <button type="submit" class="btn btn-sm btn-success">Agregar</button>
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success">Agregar</button>
                                     </form>
                                     <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}" method="post" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
                                     </form>
                                 </div>
@@ -129,7 +131,7 @@
             <div class="card-body text-center">
                 <h3 class="mb-3">Volver al Inicio</h3>
                 <p>¿Quieres explorar más productos o ver las farmacias disponibles?</p>
-                <a href="{{ url_for('index') }}" class="btn btn-accent">
+                <a href="{{ url_for('home') }}" class="btn btn-accent">
                     <i class="fas fa-home me-2"></i>Ir al Inicio
                 </a>
             </div>

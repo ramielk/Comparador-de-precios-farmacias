@@ -6,7 +6,7 @@
 <div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy.color }}';"> {# ¡CAMBIO 1: Eliminadas comillas simples alrededor de {{ pharmacy.color }}! #}
     <div class="row align-items-end">
         <div class="text-md-end">
-            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
             </a>
         </div>
@@ -87,9 +87,11 @@
                     </a>
                     <div class="d-flex w-100 justify-content-around"> {# Contenedor para los botones de carrito #}
                         <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy_id, product_id=product.id) }}" method="post" style="display:inline;"> {# ¡CAMBIO 5: CORREGIDO producto.id a product.id! #}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                            <button type="submit" class="btn btn-sm btn-success">Agregar</button> {# ¡CAMBIO 6: Botones de carrito con estilos y texto conciso! #}
                         </form>
                         <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy_id, product_id=product.id) }}" method="post" style="display:inline;"> {# ¡CAMBIO 7: CORREGIDO producto.id a product.id! #}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-danger">Quitar</button> {# ¡CAMBIO 8: Botones de carrito con estilos y texto conciso! #}
                         </form>
                     </div>

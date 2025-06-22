@@ -23,7 +23,9 @@ app = Flask(__name__)
 # ======================================================================
 
 # Configuración de seguridad - CLAVE SECRETA
-app.config['SECRET_KEY'] = os.environ.get("SESSION_SECRET", "una_clave_secreta_muy_dificil_de_adivinar_12345")
+app.config['SECRET_KEY'] = os.environ.get("SESSION_SECRET")
+
+print("Clave secreta configurada correctamente." if app.config['SECRET_KEY'] else "Error: No se pudo configurar la clave secreta.")
 
 # Configurar cookies seguras para protección adicional
 app.config.update(
@@ -34,6 +36,7 @@ app.config.update(
 
 # Habilitar protección CSRF global
 csrf = CSRFProtect(app)
+csrf.init_app(app)
 
 # Configurar cabeceras de seguridad HTTP con Flask-Talisman
 Talisman(
@@ -76,6 +79,22 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+
+    # Metodos Requeridos por Flask-Login
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
 
 # Configuración de login
 login_manager = LoginManager(app)
@@ -129,7 +148,8 @@ def get_total_cart_items():
 
 # Main route - displays both pharmacies  
 @app.route('/')
-def index():
+@login_required
+def home():
     pharmacy_data = get_pharmacy_data()
     total_cart_items = get_total_cart_items() 
     return render_template('index.html', 
@@ -138,6 +158,13 @@ def index():
                             active_page='home',
                             total_cart_items=total_cart_items)
 
+# Redirigir al login al iniciar la aplicación
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'register', 'static']
+    if not current_user.is_authenticated and request.endpoint not in allowed_routes:
+        return redirect(url_for('login'))
+
 # Individual pharmacy view
 @app.route('/pharmacy/<pharmacy_id>')
 def pharmacy(pharmacy_id):
@@ -145,7 +172,7 @@ def pharmacy(pharmacy_id):
     
     if pharmacy_id not in ['pharmacy1', 'pharmacy2']:
         flash('Farmacia no encontrada.', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
     
     category = request.args.get('category', '')
     search_query = request.args.get('search', '')
@@ -194,7 +221,7 @@ def add_cart_route(pharmacy_id, product_id):
     else:
         flash("Error al agregar el producto al carrito.", 'error')
     
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('home'))
 
 @app.route('/remove_from_cart/<pharmacy_id>/<product_id>', methods=['POST'])
 def remove_cart_route(pharmacy_id, product_id):
@@ -215,7 +242,7 @@ def remove_cart_route(pharmacy_id, product_id):
     else:
         flash("El producto no está en tu carrito o ya no tienes unidades para remover.", 'warning')
 
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('home'))
 
 # --- NUEVA RUTA PARA VER EL CARRITO (CAMBIO PRINCIPAL) ---
 @app.route('/cart')
@@ -269,7 +296,7 @@ def compare():
     
     if pharmacy1_id not in ['pharmacy1', 'pharmacy2'] or pharmacy2_id not in ['pharmacy1', 'pharmacy2']:
         flash('IDs de farmacia inválidos para la comparación.', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
     
     product1 = get_product_by_id(pharmacy_data[pharmacy1_id]['products'], product1_id) if product1_id else None
     product2 = get_product_by_id(pharmacy_data[pharmacy2_id]['products'], product2_id) if product2_id else None
@@ -290,45 +317,56 @@ def compare():
 # RUTAS DE AUTENTICACIÓN CON PROTECCIÓN ADICIONAL
 # ======================================================================
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if not user:
+            flash('El usuario no existe. Por favor, regístrate primero.', 'warning')
+            return render_template('login.html', title='Iniciar Sesión', form=form, hide_navbar_menu=True)
+        if not check_password_hash(user.password, form.password.data):
+            flash('Contraseña incorrecta. Intenta de nuevo.', 'danger')
+            return render_template('login.html', title='Iniciar Sesión', form=form, hide_navbar_menu=True)
+        login_user(user)
+        next_page = request.args.get('next')
+        return redirect(next_page) if next_page else redirect(url_for('home'))
+    if form.errors:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Error en {getattr(form, field).label.text}: {error}", 'danger')
+    return render_template('login.html', title='Iniciar Sesión', form=form, hide_navbar_menu=True)
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    
+        return redirect(url_for('home'))
     form = RegistrationForm()
     if form.validate_on_submit():
+        existing_user = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
+        if existing_user:
+            flash('El usuario o correo ya está registrado. Usa otros datos.', 'warning')
+            return render_template('register.html', title='Registro', form=form, hide_navbar_menu=True)
         hashed_password = generate_password_hash(form.password.data)
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
         flash('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión', 'success')
-        return redirect(url_for('login'))
-    
-    return render_template('register.html', title='Registro', form=form)
-
-@app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute", error_message="Demasiados intentos. Por favor espera 1 minuto.")  # Protección contra fuerza bruta
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and check_password_hash(user.password, form.password.data):
-            login_user(user)
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
-        else:
-            flash('Inicio de sesión fallido. Verifica email y contraseña', 'danger')
-    
-    return render_template('login.html', title='Iniciar Sesión', form=form)
+        login_user(user)
+        return redirect(url_for('home'))
+    if form.errors:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Error en {getattr(form, field).label.text}: {error}", 'danger')
+    return render_template('register.html', title='Registro', form=form, hide_navbar_menu=True)
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('home'))
 
 # ======================================================================
 # INICIO DE LA APLICACIÓN

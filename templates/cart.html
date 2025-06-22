@@ -33,9 +33,11 @@
                         <span class="fw-bold">${{ "%.2f"|format(item.item_total) }}</span>
                         <div class="d-flex mt-2">
                             <form action="{{ url_for('add_cart_route', pharmacy_id=item.pharmacy_id, product_id=item.product_id) }}" method="post" class="me-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-success">+</button>
                             </form>
                             <form action="{{ url_for('remove_cart_route', pharmacy_id=item.pharmacy_id, product_id=item.product_id) }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-danger">-</button>
                             </form>
                         </div>
@@ -49,7 +51,7 @@
             </ul>
         </div>
         <div class="text-center mt-4">
-            <a href="{{ url_for('index') }}" class="btn btn-primary me-2">
+            <a href="{{ url_for('home') }}" class="btn btn-primary me-2">
                 <i class="fas fa-shopping-basket me-2"></i>Seguir Comprando
             </a>
             <button type="button" class="btn btn-success">
@@ -62,7 +64,7 @@
 <div class="alert alert-info text-center mt-4">
     <i class="fas fa-info-circle me-2"></i>Tu carrito está vacío. ¡Agrega algunos productos!
     <br><br>
-    <a href="{{ url_for('index') }}" class="btn btn-info">Ir a la página principal</a>
+    <a href="{{ url_for('home') }}" class="btn btn-info">Ir a la página principal</a>
 </div>
 {% endif %}
 {% endblock %}

@@ -42,28 +42,29 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
+            <a class="navbar-brand mx-auto text-center w-100" href="{{ url_for('home') }}">
                 <i class="fa-solid fa-pills me-2"></i>
                 Comparación de Inventario de Farmacias
             </a>
+            {% if not hide_navbar_menu %}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('index') }}">
+                        <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('home') }}">
                             <i class="fas fa-home me-1"></i> Inicio
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'pharmacy1' %}active{% endif %}" href="{{ url_for('pharmacy', pharmacy_id='pharmacy1') }}">
-                            <i class="fas fa-mortar-pestle me-1"></i> HealthPlus
+                            <i class="fas fa-mortar-pestle me-1"></i> Farmatodo
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'pharmacy2' %}active{% endif %}" href="{{ url_for('pharmacy', pharmacy_id='pharmacy2') }}">
-                            <i class="fas fa-prescription-bottle-medical me-1"></i> MediCare
+                            <i class="fas fa-prescription-bottle-medical me-1"></i> Farmahorro
                         </a>
                     </li>
                     <li class="nav-item">
@@ -79,8 +80,6 @@
                             {% endif %}
                         </a>
                     </li>
-                    
-                    <!-- NUEVO CÓDIGO DE AUTENTICACIÓN -->
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <span class="nav-link">Hola, {{ current_user.username }}</span>
@@ -98,6 +97,12 @@
                     {% endif %}
                 </ul>
             </div>
+            {% else %}
+            <div class="d-flex justify-content-end w-100">
+                <a class="btn btn-light me-2" href="{{ url_for('login') }}">Iniciar Sesión</a>
+                <a class="btn btn-outline-light" href="{{ url_for('register') }}">Registrarse</a>
+            </div>
+            {% endif %}
         </div>
     </nav>
 

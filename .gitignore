@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Editor-specific files
+.vscode/
+.idea/
+
+# Flask-specific files
+instance/ # Flask instance folder for configuration and database files
+
+# Database files
+*.db
+*.sqlite3
+
+# Log files
+*.log
+
+# Sensitive information (e.g., configuration files with credentials)
+config.py
+.env

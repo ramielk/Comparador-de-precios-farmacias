@@ -3,8 +3,7 @@
 {% block title %}EcoFarmacia - {{ pharmacy.name }}{% endblock %}
 
 {% block content %}
-<div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy.color }}';"> {# ¡CAMBIO 1: Eliminadas comillas
-    simples alrededor de {{ pharmacy.color }}! #}
+<div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy.color }}';">
     <div class="row align-items-end">
         <div class="text-md-end">
             <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
@@ -59,8 +58,7 @@
     {% for product in pharmacy.products %}
     <div class="col-md-4 mb-4">
         <div class="card shadow-sm h-100 product-detail-card">
-            <div class="card-header" style="background-color: '{{ pharmacy.color }}'20;"> {# ¡CAMBIO 2: Eliminadas
-                comillas simples alrededor de {{ pharmacy.color }}! #}
+            <div class="card-header" style="background-color: '{{ pharmacy.color }}'20;">
                 <h5 class="card-title mb-0">{{ product.name }}</h5>
                 <span class="category-badge">{{ product.category }}</span>
             </div>

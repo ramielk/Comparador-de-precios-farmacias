@@ -205,7 +205,6 @@ def pharmacy(pharmacy_id):
     product1_id = request.args.get("product1", type=int)
     product2_id = request.args.get("product2", type=int)
 
-    # Asegurarse de que pharmacy_id esté disponible en el contexto de la plantilla
     return render_template(
         "pharmacy.html",
         pharmacy=pharmacy,
@@ -217,7 +216,7 @@ def pharmacy(pharmacy_id):
         total_cart_items=total_cart_items,
         product1_id=product1_id,
         product2_id=product2_id,
-        pharmacy_id=pharmacy_id,  # Asegurarse de pasar pharmacy_id a la plantilla
+        pharmacy_id=pharmacy_id,
     )
 
 

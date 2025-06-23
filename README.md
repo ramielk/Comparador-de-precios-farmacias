@@ -18,10 +18,15 @@ Este proyecto es una aplicación web Flask para comparar inventarios y precios d
 
 2. **Crea un entorno virtual (recomendado):**
 
-   En Windows:
+   En Windows (cmd):
    ```sh
    python -m venv venv
    venv\Scripts\activate
+   ```
+   En Windows (PowerShell):
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
    ```
    En Mac/Linux:
    ```sh

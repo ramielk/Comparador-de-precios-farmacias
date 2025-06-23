@@ -3,7 +3,8 @@
 {% block title %}EcoFarmacia - {{ pharmacy.name }}{% endblock %}
 
 {% block content %}
-<div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy.color }}';"> {# ¡CAMBIO 1: Eliminadas comillas simples alrededor de {{ pharmacy.color }}! #}
+<div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy.color }}';"> {# ¡CAMBIO 1: Eliminadas comillas
+    simples alrededor de {{ pharmacy.color }}! #}
     <div class="row align-items-end">
         <div class="text-md-end">
             <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
@@ -21,25 +22,29 @@
                 <select name="category" id="category" class="form-select">
                     <option value="">Todas las Categorías</option>
                     {% for category in categories %}
-                    <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                    <option value="{{ category }}" {% if selected_category==category %}selected{% endif %}>{{ category
+                        }}</option>
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div class="col-md-4">
                 <label for="search" class="form-label">Buscar</label>
-                <input type="text" name="search" id="search" class="form-control" placeholder="Buscar productos..." value="{{ search_query }}">
+                <input type="text" name="search" id="search" class="form-control" placeholder="Buscar productos..."
+                    value="{{ search_query }}">
             </div>
-            
+
             <div class="col-md-3">
                 <label for="availability" class="form-label">Disponibilidad</label>
                 <select name="availability" id="availability" class="form-select">
                     <option value="">Todos los Productos</option>
-                    <option value="in_stock" {% if selected_availability == 'in_stock' %}selected{% endif %}>En Stock</option>
-                    <option value="out_of_stock" {% if selected_availability == 'out_of_stock' %}selected{% endif %}>Agotado</option>
+                    <option value="in_stock" {% if selected_availability=='in_stock' %}selected{% endif %}>En Stock
+                    </option>
+                    <option value="out_of_stock" {% if selected_availability=='out_of_stock' %}selected{% endif %}>
+                        Agotado</option>
                 </select>
             </div>
-            
+
             <div class="col-md-1 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="fas fa-filter"></i>
@@ -51,58 +56,59 @@
 
 <div class="row">
     {% if pharmacy.products|length > 0 %}
-        {% for product in pharmacy.products %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100 product-detail-card">
-                <div class="card-header" style="background-color: '{{ pharmacy.color }}'20;"> {# ¡CAMBIO 2: Eliminadas comillas simples alrededor de {{ pharmacy.color }}! #}
-                    <h5 class="card-title mb-0">{{ product.name }}</h5>
-                    <span class="category-badge">{{ product.category }}</span>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">{{ product.description }}</p>
-                    <div class="product-info">
-                        <div class="info-item">
-                            <span class="label">Precio:</span>
-                            <span class="value price">${{ "%.2f"|format(product.price) }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Unidad:</span>
-                            <span class="value">{{ product.unit }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Estado:</span>
-                            <span class="value">
-                                {% if product.in_stock %}
-                                <span class="badge bg-success">En Stock ({{ product.stock_quantity }})</span>
-                                {% else %}
-                                <span class="badge bg-danger">Agotado</span>
-                                {% endif %}
-                            </span>
-                        </div>
+    {% for product in pharmacy.products %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100 product-detail-card">
+            <div class="card-header" style="background-color: '{{ pharmacy.color }}'20;"> {# ¡CAMBIO 2: Eliminadas
+                comillas simples alrededor de {{ pharmacy.color }}! #}
+                <h5 class="card-title mb-0">{{ product.name }}</h5>
+                <span class="category-badge">{{ product.category }}</span>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ product.description }}</p>
+                <div class="product-info">
+                    <div class="info-item">
+                        <span class="label">Precio:</span>
+                        <span class="value price">${{ "%.2f"|format(product.price) }}</span>
                     </div>
-                </div>
-                <div class="card-footer d-flex flex-column align-items-center"> {# ¡CAMBIO 3: Ajuste de estilos para el footer! #}
-                    <a href="{{ url_for('compare', product1=product.id, pharmacy1=pharmacy_id) }}" class="btn btn-outline-primary w-100 mb-2"> {# ¡CAMBIO 4: Cambié btn-outline-accent por btn-outline-primary y agregué mb-2! #}
-                        <i class="fas fa-balance-scale me-2"></i>Comparar con Otra Farmacia
-                    </a>
-                    <div class="d-flex w-100 justify-content-around"> {# Contenedor para los botones de carrito #}
-                        <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy_id, product_id=product.id) }}" method="post" style="display:inline;"> {# ¡CAMBIO 5: CORREGIDO producto.id a product.id! #}
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                           <button type="submit" class="btn btn-sm btn-success">Agregar</button> {# ¡CAMBIO 6: Botones de carrito con estilos y texto conciso! #}
-                        </form>
-                        <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy_id, product_id=product.id) }}" method="post" style="display:inline;"> {# ¡CAMBIO 7: CORREGIDO producto.id a product.id! #}
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-danger">Quitar</button> {# ¡CAMBIO 8: Botones de carrito con estilos y texto conciso! #}
-                        </form>
+                    <div class="info-item">
+                        <span class="label">Unidad:</span>
+                        <span class="value">{{ product.unit }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Estado:</span>
+                        <span class="value">
+                            {% if product.in_stock %}
+                            <span class="badge bg-success">En Stock ({{ product.stock_quantity }})</span>
+                            {% else %}
+                            <span class="badge bg-danger">Agotado</span>
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>
+            <div class="card-footer d-flex flex-column align-items-center">
+                {% if product1_id %}
+                {# Si ya hay un producto en comparación, este enlace añade el segundo #}
+                <a href="{{ url_for('compare', product1=product1_id, product2=product.id) }}"
+                    class="btn btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-plus-circle me-2"></i>Añadir a Comparación
+                </a>
+                {% else %}
+                {# Si no hay comparación activa, este enlace inicia una nueva #}
+                <a href="{{ url_for('compare', product1=product.id) }}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-balance-scale me-2"></i>Comparar con Otra Farmacia
+                </a>
+                {% endif %}
+            </div>
         </div>
-        {% endfor %}
+    </div>
+    {% endfor %}
     {% else %}
     <div class="col-12">
         <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>No se encontraron productos que coincidan con tus criterios. Intenta ajustar los filtros.
+            <i class="fas fa-info-circle me-2"></i>No se encontraron productos que coincidan con tus criterios. Intenta
+            ajustar los filtros.
         </div>
     </div>
     {% endif %}

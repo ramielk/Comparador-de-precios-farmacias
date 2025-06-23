@@ -19,7 +19,7 @@
     <div class="col-md-6 mb-4">
         {% if pharmacies|length > 0 %}
         {% set pharmacy1 = pharmacies[0] %}
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid {{ pharmacy1.color }};">
+        <div class="card shadow-sm h-100 pharmacy-card" {% if not current_user.is_authenticated %}style="border-top: 5px solid {{ pharmacy1.color }};"{% endif %}>
             <div class="card-body"
                 style="border-color: #072d5e; border-style: solid; border-width: thick;border-radius: inherit;">
                 <div class="text-center mb-3">
@@ -61,7 +61,7 @@
     <div class="col-md-6 mb-4">
         {% if pharmacies|length > 1 %}
         {% set pharmacy2 = pharmacies[1] %}
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid {{ pharmacy2.color }};">
+        <div class="card shadow-sm h-100 pharmacy-card" {% if not current_user.is_authenticated %}style="border-top: 5px solid {{ pharmacy2.color }};"{% endif %}>
             <div class="card-body"
                 style="border-color: #b32715; border-style: solid; border-width: thick; border-radius: inherit;">
                 <div class="text-center mb-3">

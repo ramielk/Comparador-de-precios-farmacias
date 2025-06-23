@@ -17,7 +17,8 @@
 
 <div class="row">
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy1.color }}';"> {# CAMBIO 2: Eliminadas comillas simples #}
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy1.color }}';"> {#
+            CAMBIO 2: Eliminadas comillas simples #}
             <div class="card-body"
                 style="border-color: #072d5e; border-style: solid; border-width: thick;border-radius: inherit;">
                 <div class="text-center mb-3">
@@ -42,11 +43,15 @@
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
                                 <div class="d-flex w-100 justify-content-around mt-2">
-                                    <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}" method="post" style="display:inline;">
+                                    <form
+                                        action="{{ url_for('add_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}"
+                                        method="post" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-success">Agregar</button>
                                     </form>
-                                    <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}" method="post" style="display:inline;">
+                                    <form
+                                        action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy1_id, product_id=product1.id) }}"
+                                        method="post" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
                                     </form>
@@ -60,7 +65,6 @@
                     </div>
                     {% endif %}
                 </div>
-
                 <div class="text-center mt-3">
                     <a href="{{ url_for('pharmacy', pharmacy_id=pharmacy1_id or 1) }}" class="btn btn-primary">
                         <i class="fas fa-list me-2"></i>Ver Todos los Productos
@@ -71,7 +75,8 @@
     </div>
 
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy2.color }}';"> {# CAMBIO 3: Eliminadas comillas simples #}
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy2.color }}';"> {#
+            CAMBIO 3: Eliminadas comillas simples #}
             <div class="card-body"
                 style="border-color: #b32715; border-style: solid; border-width: thick; border-radius: inherit;">
                 <div class="text-center mb-3">
@@ -96,11 +101,15 @@
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
                                 <div class="d-flex w-100 justify-content-around mt-2">
-                                    <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}" method="post" style="display:inline;">
+                                    <form
+                                        action="{{ url_for('add_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}"
+                                        method="post" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-success">Agregar</button>
                                     </form>
-                                    <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}" method="post" style="display:inline;">
+                                    <form
+                                        action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy2_id, product_id=product2.id) }}"
+                                        method="post" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
                                     </form>
@@ -116,7 +125,8 @@
                 </div>
 
                 <div class="text-center mt-3">
-                    <a href="{{ url_for('pharmacy', pharmacy_id=pharmacy2_id or 2) }}" class="btn btn-primary">
+                    <a href="{{ url_for('pharmacy', pharmacy_id=pharmacy2_id or 2, product1=product1.id if product1 else None) }}"
+                        class="btn btn-primary">
                         <i class="fas fa-list me-2"></i>Ver Todos los Productos
                     </a>
                 </div>

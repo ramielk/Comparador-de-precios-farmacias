@@ -44,6 +44,23 @@ Este proyecto es una aplicación web Flask para comparar inventarios y precios d
    ```
    Luego abre tu navegador en [http://localhost:5000](http://localhost:5000)
 
+7. **Si tienes problemas al iniciar sesión o con variables de entorno:**
+   Si al iniciar la aplicación ves un error como:
+   
+   ```
+   ModuleNotFoundError: No module named 'dotenv'
+   ```
+   o
+   ```
+   ImportError: cannot import name 'find_dotenv' from 'dotenv'
+   ```
+   
+   Debes instalar el paquete `python-dotenv` ejecutando:
+   ```sh
+   pip install python-dotenv
+   ```
+   Esto es necesario para que Flask pueda cargar las variables de entorno desde el archivo `.env`.
+
 ## Notas de seguridad
 - En desarrollo, puedes dejar `SESSION_COOKIE_SECURE=False` para evitar problemas con CSRF en HTTP.
 - Para producción, asegúrate de usar HTTPS y una clave secreta fuerte.

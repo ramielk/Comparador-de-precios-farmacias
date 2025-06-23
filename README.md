@@ -10,6 +10,12 @@ Este proyecto es una aplicación web Flask para comparar inventarios y precios d
 
 1. **Clona el repositorio o descarga el código fuente.**
 
+   Para clonar con Git:
+   ```sh
+   git clone https://github.com/usuario/PharmacyCompare.git
+   cd PharmacyCompare
+   ```
+
 2. **Crea un entorno virtual (recomendado):**
 
    En Windows:

@@ -1,16 +1,15 @@
 from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from forms import RegistrationForm, LoginForm
+from models import db, Pharmacy, Product, User
 
 import logging
 import os
-from pharmacy_data import get_pharmacy_data, get_product_by_id, get_categories, filter_products
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -71,30 +70,7 @@ limiter = Limiter(
 # Configuración de base de datos
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)  # Crear instancia de SQLAlchemy
-
-# Definición del modelo de usuario
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-
-    # Metodos Requeridos por Flask-Login
-    @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_active(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return str(self.id)
+db.init_app(app)  # Inicializar la extensión con la app
 
 # Configuración de login
 login_manager = LoginManager(app)
@@ -103,16 +79,11 @@ login_manager.login_view = 'login'
 # Cargador de usuario para Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
-# Crear tablas en la base de datos
-def create_tables():
-    with app.app_context():
-        db.create_all()
-        print("¡Tablas creadas exitosamente!")
-
-# Inicializar la base de datos
-create_tables()
+# Crear tablas en la base de datos SOLO si no existen
+with app.app_context():
+    db.create_all()
 
 # ======================================================================
 # FUNCIONALIDAD DE LA APLICACIÓN
@@ -146,172 +117,117 @@ def get_total_cart_items():
 # RUTAS DE LA APLICACIÓN
 # ======================================================================
 
-# Main route - displays both pharmacies  
+# Main route - displays both pharmacies
 @app.route('/')
 @login_required
 def home():
-    pharmacy_data = get_pharmacy_data()
-    total_cart_items = get_total_cart_items() 
+    pharmacies = Pharmacy.query.all()
+    total_cart_items = get_total_cart_items()
     return render_template('index.html', 
-                            pharmacy1=pharmacy_data['pharmacy1'],
-                            pharmacy2=pharmacy_data['pharmacy2'],
-                            active_page='home',
-                            total_cart_items=total_cart_items)
+        pharmacies=pharmacies,
+        active_page='home',
+        total_cart_items=total_cart_items)
 
-# Redirigir al login al iniciar la aplicación
-@app.before_request
-def require_login():
-    allowed_routes = ['login', 'register', 'static']
-    if not current_user.is_authenticated and request.endpoint not in allowed_routes:
-        return redirect(url_for('login'))
-
-# Individual pharmacy view
-@app.route('/pharmacy/<pharmacy_id>')
+@app.route('/pharmacy/<int:pharmacy_id>')
 def pharmacy(pharmacy_id):
-    pharmacy_data = get_pharmacy_data()
-    
-    if pharmacy_id not in ['pharmacy1', 'pharmacy2']:
-        flash('Farmacia no encontrada.', 'error')
-        return redirect(url_for('home'))
-    
+    pharmacy = Pharmacy.query.get_or_404(pharmacy_id)
     category = request.args.get('category', '')
     search_query = request.args.get('search', '')
     availability = request.args.get('availability', '')
-    
-    pharmacy = pharmacy_data[pharmacy_id]
-    
-    categories = get_categories(pharmacy_data)
-    
-    original_products = pharmacy['products'] 
-    
-    if category or search_query or availability:
-        pharmacy['products'] = filter_products(
-            original_products,
-            category=category,
-            search_query=search_query,
-            availability=availability
-        )
-    
+    products = pharmacy.products
+    # Filtros
+    if category:
+        products = [p for p in products if p.category == category]
+    if search_query:
+        products = [p for p in products if search_query.lower() in p.name.lower() or search_query.lower() in p.description.lower()]
+    if availability == 'in_stock':
+        products = [p for p in products if p.in_stock]
+    elif availability == 'out_of_stock':
+        products = [p for p in products if not p.in_stock]
     total_cart_items = get_total_cart_items()
-
+    categories = sorted(list(set([p.category for p in pharmacy.products])))
     return render_template('pharmacy.html', 
-                            pharmacy=pharmacy,
-                            pharmacy_id=pharmacy_id,
-                            categories=categories,
-                            selected_category=category,
-                            search_query=search_query,
-                            selected_availability=availability,
-                            active_page=pharmacy_id,
-                            total_cart_items=total_cart_items)
+        pharmacy=pharmacy,
+        pharmacy_id=pharmacy_id,
+        categories=categories,
+        selected_category=category,
+        search_query=search_query,
+        selected_availability=availability,
+        active_page=pharmacy.name,
+        total_cart_items=total_cart_items)
 
 # Rutas del carrito
-@app.route('/add_to_cart/<pharmacy_id>/<product_id>', methods=['POST'])
+@app.route('/add_to_cart/<int:pharmacy_id>/<int:product_id>', methods=['POST'])
 def add_cart_route(pharmacy_id, product_id):
-    pharmacy_data = get_pharmacy_data()
-    product_info = None
-    if pharmacy_id in pharmacy_data:
-        for p in pharmacy_data[pharmacy_id]['products']:
-            if str(p['id']) == product_id:
-                product_info = p
-                break
-
-    if product_info:
+    product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
+    if product:
         add_to_cart_logic(product_id, pharmacy_id)
-        flash(f"'{product_info['name']}' de {pharmacy_data[pharmacy_id]['name']} agregado al carrito.", 'success')
+        flash(f"'{product.name}' de {product.pharmacy.name} agregado al carrito.", 'success')
     else:
         flash("Error al agregar el producto al carrito.", 'error')
-    
     return redirect(request.referrer or url_for('home'))
 
-@app.route('/remove_from_cart/<pharmacy_id>/<product_id>', methods=['POST'])
+@app.route('/remove_from_cart/<int:pharmacy_id>/<int:product_id>', methods=['POST'])
 def remove_cart_route(pharmacy_id, product_id):
-    pharmacy_data = get_pharmacy_data()
-    product_info = None
-    if pharmacy_id in pharmacy_data:
-        for p in pharmacy_data[pharmacy_id]['products']:
-            if str(p['id']) == product_id:
-                product_info = p
-                break
-    
+    product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
     cart = session.get('cart', {})
     key = f'{pharmacy_id}:{product_id}'
-
-    if key in cart and cart[key] > 0:
+    if product and key in cart and cart[key] > 0:
         remove_from_cart_logic(product_id, pharmacy_id)
-        flash(f"'{product_info['name']}' de {pharmacy_data[pharmacy_id]['name']} removido del carrito.", 'info')
+        flash(f"'{product.name}' de {product.pharmacy.name} removido del carrito.", 'info')
     else:
         flash("El producto no está en tu carrito o ya no tienes unidades para remover.", 'warning')
-
     return redirect(request.referrer or url_for('home'))
 
-# --- NUEVA RUTA PARA VER EL CARRITO (CAMBIO PRINCIPAL) ---
 @app.route('/cart')
-@login_required 
+@login_required
 def view_cart():
     cart = session.get('cart', {})
-    pharmacy_data = get_pharmacy_data()
     cart_items_details = []
     total_price = 0
-
     for key, quantity in cart.items():
-        pharmacy_id, product_id = key.split(':')
-        
-        # Asegurarse de que pharmacy_id es válido
-        if pharmacy_id in pharmacy_data:
-            product = get_product_by_id(pharmacy_data[pharmacy_id]['products'], product_id)
-            if product:
-                item_total = product['price'] * quantity
-                total_price += item_total
-                cart_items_details.append({
-                    'pharmacy_id': pharmacy_id,
-                    'pharmacy_name': pharmacy_data[pharmacy_id]['name'],
-                    'product_id': product_id,
-                    'product_name': product['name'],
-                    'quantity': quantity,
-                    'price': product['price'],
-                    'item_total': item_total
-                })
-            else:
-                flash(f"Error: Producto con ID {product_id} no encontrado en {pharmacy_data[pharmacy_id]['name']}. Podría haber sido eliminado.", 'error')
+        pharmacy_id, product_id = map(int, key.split(':'))
+        product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
+        if product:
+            item_total = product.price * quantity
+            total_price += item_total
+            cart_items_details.append({
+                'pharmacy_id': pharmacy_id,
+                'pharmacy_name': product.pharmacy.name,
+                'product_id': product_id,
+                'product_name': product.name,
+                'quantity': quantity,
+                'price': product.price,
+                'item_total': item_total
+            })
         else:
-            flash(f"Error: Farmacia con ID {pharmacy_id} no encontrada para un ítem del carrito.", 'error')
-
+            flash(f"Error: Producto con ID {product_id} no encontrado en la base de datos.", 'error')
     total_cart_items = get_total_cart_items()
     return render_template('cart.html', 
-                           cart_items=cart_items_details, 
-                           total_price=total_price,
-                           total_cart_items=total_cart_items,
-                           active_page='cart')
+        cart_items=cart_items_details, 
+        total_price=total_price,
+        total_cart_items=total_cart_items,
+        active_page='cart')
 
-# Product comparison route
 @app.route('/compare')
 def compare():
-    pharmacy_data = get_pharmacy_data()
-    
-    product1_id = request.args.get('product1')
-    product2_id = request.args.get('product2')
-    
-    pharmacy1_id = request.args.get('pharmacy1', 'pharmacy1')
-    pharmacy2_id = request.args.get('pharmacy2', 'pharmacy2')
-    
-    if pharmacy1_id not in ['pharmacy1', 'pharmacy2'] or pharmacy2_id not in ['pharmacy1', 'pharmacy2']:
-        flash('IDs de farmacia inválidos para la comparación.', 'error')
-        return redirect(url_for('home'))
-    
-    product1 = get_product_by_id(pharmacy_data[pharmacy1_id]['products'], product1_id) if product1_id else None
-    product2 = get_product_by_id(pharmacy_data[pharmacy2_id]['products'], product2_id) if product2_id else None
-    
+    pharmacies = Pharmacy.query.all()
+    product1_id = request.args.get('product1', type=int)
+    product2_id = request.args.get('product2', type=int)
+    pharmacy1_id = request.args.get('pharmacy1', type=int)
+    pharmacy2_id = request.args.get('pharmacy2', type=int)
+    product1 = db.session.get(Product, product1_id) if product1_id else None
+    product2 = db.session.get(Product, product2_id) if product2_id else None
     total_cart_items = get_total_cart_items()
-
     return render_template('compare.html', 
-                            product1=product1,
-                            product2=product2,
-                            pharmacy1=pharmacy_data[pharmacy1_id],
-                            pharmacy2=pharmacy_data[pharmacy2_id],
-                            pharmacy1_id=pharmacy1_id,
-                            pharmacy2_id=pharmacy2_id,
-                            active_page='compare',
-                            total_cart_items=total_cart_items)
+        product1=product1,
+        product2=product2,
+        pharmacy1=product1.pharmacy if product1 else None,
+        pharmacy2=product2.pharmacy if product2 else None,
+        pharmacy1_id=pharmacy1_id,
+        pharmacy2_id=pharmacy2_id,
+        active_page='compare',
+        total_cart_items=total_cart_items)
 
 # ======================================================================
 # RUTAS DE AUTENTICACIÓN CON PROTECCIÓN ADICIONAL

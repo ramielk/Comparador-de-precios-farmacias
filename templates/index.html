@@ -1,6 +1,6 @@
- {% extends "layout.html" %}
+{% extends "layout.html" %}
 
-{% block title %}Inicio de Comparación de Farmacias{% endblock %} {# CAMBIO 1: Título más descriptivo #}
+{% block title %}Inicio de Comparación de Farmacias{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
@@ -17,7 +17,9 @@
 
 <div class="row">
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy1.color }}';"> 
+        {% if pharmacies|length > 0 %}
+        {% set pharmacy1 = pharmacies[0] %}
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid {{ pharmacy1.color }};">
             <div class="card-body"
                 style="border-color: #072d5e; border-style: solid; border-width: thick;border-radius: inherit;">
                 <div class="text-center mb-3">
@@ -41,23 +43,25 @@
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
                             </div>
-                            {# No se añaden botones de carrito aquí, ya que es solo una vista previa #}
                         </div>
                     </div>
                     {% endfor %}
                 </div>
 
                 <div class="text-center mt-3">
-                    <a href="{{ url_for('pharmacy', pharmacy_id='pharmacy1') }}" class="btn btn-primary">
+                    <a href="{{ url_for('pharmacy', pharmacy_id=pharmacy1.id) }}" class="btn btn-primary">
                         <i class="fas fa-list me-2"></i>Ver Todos los Productos
                     </a>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid '{{ pharmacy2.color }}';"> {# CAMBIO 3: Eliminadas comillas simples #}
+        {% if pharmacies|length > 1 %}
+        {% set pharmacy2 = pharmacies[1] %}
+        <div class="card shadow-sm h-100 pharmacy-card" style="border-top: 5px solid {{ pharmacy2.color }};">
             <div class="card-body"
                 style="border-color: #b32715; border-style: solid; border-width: thick; border-radius: inherit;">
                 <div class="text-center mb-3">
@@ -81,19 +85,19 @@
                                 <span class="badge bg-danger">Agotado</span>
                                 {% endif %}
                             </div>
-                            {# No se añaden botones de carrito aquí, ya que es solo una vista previa #}
                         </div>
                     </div>
                     {% endfor %}
                 </div>
 
                 <div class="text-center mt-3">
-                    <a href="{{ url_for('pharmacy', pharmacy_id='pharmacy2') }}" class="btn btn-primary">
+                    <a href="{{ url_for('pharmacy', pharmacy_id=pharmacy2.id) }}" class="btn btn-primary">
                         <i class="fas fa-list me-2"></i>Ver Todos los Productos
                     </a>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 

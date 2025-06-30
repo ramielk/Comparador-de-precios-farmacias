@@ -13,7 +13,7 @@ class Pharmacy(db.Model):
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), unique=True, nullable=False)  # p1_001, p2_001, etc
+    code = db.Column(db.String(20), unique=False, nullable=False) # Changed to unique=False if product codes can be repeated across pharmacies
     name = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(255))
@@ -27,8 +27,11 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(20), default='user')  # Este campo es esencial
+    password = db.Column(db.String(255), nullable=False) # Increased length for hashed passwords
+    role = db.Column(db.String(20), default='customer', nullable=False) # 'customer' or 'accountant'
+    orders = db.relationship('Order', backref='customer', lazy=True)
+    approved_payments = db.relationship('Payment', backref='approver', foreign_keys='Payment.approved_by', lazy=True) # For accountant role
+
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+
+{% block title %}Factura #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-10">
+            <div class="card shadow-lg rounded-lg">
+                <div class="card-header bg-gradient-primary text-white p-4 rounded-top-lg">
+                    <h2 class="card-title text-center mb-0"><i class="fas fa-receipt me-2"></i>Factura Digital - Pedido #{{ order.id }}</h2>
+                    <p class="text-center mb-0">Generada el: {{ order.order_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Información del Cliente</h5>
+                            <p><strong>Nombre:</strong> {{ order.customer.username }}</p>
+                            <p><strong>Email:</strong> {{ order.customer.email }}</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <h5>Detalles del Pedido</h5>
+                            <p><strong>Estado del Pedido:</strong> 
+                                {% if order.status == 'pending' %}
+                                    <span class="badge bg-secondary"><i class="fas fa-clock me-1"></i> Pendiente de Referencia</span>
+                                {% elif order.status == 'payment_submitted' %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i> Pago Enviado - Pendiente de Aprobación</span>
+                                {% elif order.status == 'approved' %}
+                                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Aprobado</span>
+                                {% elif order.status == 'cancelled' %}
+                                    <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Cancelado</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Referencia de Pago:</strong> {{ order.payment_reference if order.payment_reference else 'No proporcionada' }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5>Productos del Pedido</h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Producto</th>
+                                    <th scope="col">Farmacia</th> {# Column for Pharmacy Name #}
+                                    <th scope="col">Cantidad</th>
+                                    <th scope="col">Precio Unitario</th>
+                                    <th scope="col">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>{{ item.product.pharmacy.name }}</td> {# CORRECTED LINE HERE #}
+                                    <td>{{ item.quantity }}</td>
+                                    <td>${{ "%.2f"|format(item.price_at_purchase) }}</td>
+                                    <td>${{ "%.2f"|format(item.quantity * item.price_at_purchase) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-primary fw-bold">
+                                    <td colspan="4" class="text-end">Total del Pedido:</td>
+                                    <td>${{ "%.2f"|format(order.total_amount) }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    {% if payment_details %}
+                    <h5 class="mt-4">Detalles del Pago</h5>
+                    <div class="card p-3 bg-light rounded shadow-sm">
+                        <p><strong>Referencia Enviada:</strong> {{ payment_details.reference_number }}</p>
+                        <p><strong>Monto Enviado:</strong> ${{ "%.2f"|format(payment_details.amount) }}</p>
+                        <p><strong>Fecha de Envío de Referencia:</strong> {{ payment_details.payment_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                        <p><strong>Estado del Pago:</strong> 
+                            {% if payment_details.status == 'pending' %}
+                                <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i> Pendiente de Aprobación</span>
+                            {% elif payment_details.status == 'approved' %}
+                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Aprobado</span>
+                            {% elif payment_details.status == 'rejected' %}
+                                <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Rechazado</span>
+                            {% endif %}
+                        </p>
+                        {% if payment_details.approved_by %}
+                            <p><strong>Aprobado Por:</strong> {{ payment_details.approver.username }}</p>
+                            <p><strong>Fecha de Aprobación:</strong> {{ payment_details.approval_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-circle me-2"></i> Aún no se ha registrado una referencia de pago para este pedido.
+                        <br>
+                        <a href="{{ url_for('payment_form', order_id=order.id) }}" class="btn btn-sm btn-warning mt-2">Ingresar Referencia Ahora</a>
+                    </div>
+                    {% endif %}
+
+                    <div class="text-center mt-5">
+                        <a href="{{ url_for('my_invoices') }}" class="btn btn-secondary me-3 rounded-pill">
+                            <i class="fas fa-list-alt me-2"></i>Ver Mis Pedidos
+                        </a>
+                        <a href="{{ url_for('home') }}" class="btn btn-primary rounded-pill">
+                            <i class="fas fa-home me-2"></i>Volver al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

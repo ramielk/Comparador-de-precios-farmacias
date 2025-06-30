@@ -653,6 +653,7 @@ def login():
             )
         login_user(user)
         next_page = request.args.get("next")
+        flash(f"Bienvenido de nuevo, {user.username}!", "success")
         return redirect(next_page) if next_page else redirect(url_for("home"))
     if form.errors:
         for field, errors in form.errors.items():
@@ -679,12 +680,12 @@ def register():
             )
         hashed_password = generate_password_hash(form.password.data)
         user = User(
-            username=form.username.data, email=form.email.data, password=hashed_password
+            username=form.username.data, email=form.email.data, password=hashed_password, role='customer' # Default role
         )
         db.session.add(user)
         db.session.commit()
         flash("¡Cuenta creada exitosamente! Ahora puedes iniciar sesión", "success")
-        login_user(user)
+        login_user(user) # Log in the user directly after registration
         return redirect(url_for("home"))
     if form.errors:
         for field, errors in form.errors.items():

@@ -1,14 +1,13 @@
 :root {
-    --primary: #009B77;
-    /* pharmacy green */
-    --secondary: #4A90E2;
-    /* medical blue */
-    --background: #F8F9FA;
-    /* light grey */
-    --text: #333333;
-    /* dark grey */
-    --accent: #E74C3C;
-    /* highlight red */
+    --primary: #009B77; /* pharmacy green */
+    --secondary: #4A90E2; /* medical blue */
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --background: #F8F9FA; /* light grey */
+    --text: #333333; /* dark grey */
+    --accent: #E74C3C; /* highlight red */
     --light-grey: #e9ecef;
     --card-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
     --spacing: 16px;
@@ -20,6 +19,13 @@ body {
     background-color: var(--background);
     color: var(--text);
     line-height: 1.6;
+    min-height: 100vh; /* Ensures footer sticks to bottom */
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1; /* Makes main content area grow to push footer down */
 }
 
 h1,
@@ -41,11 +47,41 @@ h6 {
 .navbar-brand {
     font-weight: 700;
     font-size: 1.5rem;
+    color: white !important; /* Ensure brand is white */
+}
+
+/* Flash Messages */
+.flash-messages {
+    margin-top: 1rem;
+}
+.flash {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px; /* Slightly more rounded */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+.flash.alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.flash.alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+.flash.alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+.flash.alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.flash.alert-error { /* Fallback for 'error' category if not mapped to 'danger' */
+    background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+}
+
+
+/* Cart Badge */
+.cart-badge {
+    font-size: 0.75em;
+    vertical-align: super;
+    margin-left: 5px;
+    background-color: var(--danger) !important;
+    padding: .35em .65em;
+    border-radius: 50rem;
 }
 
 /* Card Styling */
 .card {
-    border-radius: 0.5rem;
+    border-radius: 0.75rem; /* More rounded corners */
     box-shadow: var(--card-shadow);
     border: none;
     margin-bottom: var(--spacing);
@@ -53,6 +89,26 @@ h6 {
 
 .card-title {
     font-weight: 600;
+}
+
+.card-header {
+    border-bottom: none;
+    background-color: var(--primary); /* Default for card headers if not specified */
+    color: white;
+    font-weight: 600;
+}
+
+/* Custom Gradient Backgrounds for Card Headers */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, #007f5f 100%) !important;
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, var(--success) 0%, #218838 100%) !important;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, var(--info) 0%, #117a8b 100%) !important;
 }
 
 /* Pharmacy Cards */
@@ -202,7 +258,10 @@ h6 {
     margin-top: 1rem;
 }
 
-.img-fluid {}
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
 
 .comparison-table th {
     background-color: var(--light-grey);
@@ -217,10 +276,11 @@ h6 {
 /* Footer */
 .footer {
     border-top: 1px solid #dee2e6;
-    margin-top: 2rem;
+    margin-top: auto; /* Pushes footer to the bottom */
+    background-color: var(--light-grey) !important;
 }
 
-/* Responsive Adjustments */
+/* Responsive Font Sizes for smaller screens */
 @media (max-width: 767.98px) {
     .navbar-brand {
         font-size: 1.2rem;
@@ -237,4 +297,9 @@ h6 {
     .product-info .info-item {
         flex-direction: column;
     }
+
+    .display-6-sm { /* Custom class for smaller display-6 on small screens */
+        font-size: 1.5rem; /* Smaller than default display-6 */
+    }
 }
+

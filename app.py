@@ -115,6 +115,13 @@ def load_user(user_id):
 # Crear tablas en la base de datos SOLO si no existen
 with app.app_context():
     db.create_all()
+    # Optional: Add an accountant user for testing if none exists
+    if not User.query.filter_by(email='accountant@example.com').first():
+        hashed_password = generate_password_hash('password') # Use a strong password in production
+        accountant_user = User(username='accountant', email='accountant@example.com', password=hashed_password, role='accountant')
+        db.session.add(accountant_user)
+        db.session.commit()
+        logging.info("Accountant user created: accountant@example.com / password")
 
 # ======================================================================
 # FUNCIONALIDAD DE LA APLICACIÓN
@@ -152,12 +159,34 @@ def remove_from_cart_logic(product_id, pharmacy_id):
 def get_total_cart_items():
     cart = session.get("cart", {})
     return sum(cart.values())
+    
+def clear_cart():
+    session["cart"] = {}
+    logging.debug("Carrito de la sesión vaciado.")    
+
+# ---- Funciones de utilidad para roles ----
+def is_accountant():
+    return current_user.is_authenticated and current_user.role == 'accountant'
+
+def accountant_required(f):
+    """Decorator to restrict access to accountant users."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_accountant():
+            flash('No tienes permiso para acceder a esta página.', 'danger')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+from functools import wraps # Import wraps for decorators
 
 
 # ======================================================================
 # RUTAS DE LA APLICACIÓN
 # ======================================================================
-
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow} 
 
 # Main route - displays both pharmacies
 @app.route("/")
@@ -236,7 +265,8 @@ def add_cart_route(pharmacy_id, product_id):
 
 
 @app.route("/remove_from_cart/<int:pharmacy_id>/<int:product_id>", methods=["POST"])
-def remove_cart_route(pharmacy_id, product_id):
+@login_requireddef
+remove_cart_route(pharmacy_id, product_id):
     product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
     cart = session.get("cart", {})
     key = f"{pharmacy_id}:{product_id}"
@@ -259,6 +289,10 @@ def view_cart():
     cart = session.get("cart", {})
     cart_items_details = []
     total_price = 0
+    
+    # Track if any product in cart is invalid
+    invalid_product_in_cart = False
+
     for key, quantity in cart.items():
         pharmacy_id, product_id = map(int, key.split(":"))
         product = Product.query.filter_by(
@@ -280,9 +314,15 @@ def view_cart():
             )
         else:
             flash(
-                f"Error: Producto con ID {product_id} no encontrado en la base de datos.",
+                f"Error: Producto con ID {product_id} no encontrado en la base de datos y ha sido removido del carrito.",
                 "error",
             )
+            invalid_product_in_cart = True
+            # Remove invalid item from cart session to prevent persistent errors
+            del session['cart'][key]
+            session.modified = True # Important to mark session as modified after direct dict manipulation
+
+
     total_cart_items = get_total_cart_items()
     return render_template(
         "cart.html",
@@ -290,7 +330,262 @@ def view_cart():
         total_price=total_price,
         total_cart_items=total_cart_items,
         active_page="cart",
+        invalid_product_in_cart=invalid_product_in_cart # Pass flag to template
     )
+
+# ---- Rutas de Checkout y Pago ----
+@app.route("/checkout", methods=["GET", "POST"])
+@login_required
+def checkout():
+    cart = session.get("cart", {})
+    if not cart:
+        flash("Tu carrito está vacío. Agrega productos antes de proceder al pago.", "warning")
+        return redirect(url_for("view_cart"))
+
+    cart_items_details = []
+    total_price = 0
+    products_to_order = [] # To store actual Product objects for order creation
+
+    for key, quantity in cart.items():
+        pharmacy_id, product_id = map(int, key.split(":"))
+        product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
+        if not product or product.stock_quantity < quantity: # Basic stock check
+            flash(f"Producto '{product.name}' de {product.pharmacy.name} no disponible en la cantidad solicitada o no existe. Por favor, revisa tu carrito.", "danger")
+            return redirect(url_for("view_cart"))
+        
+        item_total = product.price * quantity
+        total_price += item_total
+        cart_items_details.append({
+            "pharmacy_id": pharmacy_id,
+            "pharmacy_name": product.pharmacy.name,
+            "product_id": product_id,
+            "product_name": product.name,
+            "quantity": quantity,
+            "price": product.price,
+            "item_total": item_total,
+        })
+        products_to_order.append({"product": product, "quantity": quantity})
+
+
+    if request.method == "POST":
+        try:
+            # Create a new Order
+            new_order = Order(
+                user_id=current_user.id,
+                total_amount=total_price,
+                status='payment_submitted' # Initial status after checkout confirmation
+            )
+            db.session.add(new_order)
+            db.session.flush() # Get the ID for the new_order before committing
+
+            # Add items to the order
+            for item_data in products_to_order:
+                product = item_data["product"]
+                quantity = item_data["quantity"]
+                order_item = OrderItem(
+                    order_id=new_order.id,
+                    product_id=product.id,
+                    pharmacy_id=product.pharmacy_id,
+                    quantity=quantity,
+                    price_at_purchase=product.price
+                )
+                db.session.add(order_item)
+                
+                # Optionally, deduct stock here if you want to implement stock management
+                # product.stock_quantity -= quantity
+                # db.session.add(product) # Mark product as modified if its stock changes
+
+            db.session.commit()
+            clear_cart() # Empty the cart after creating the order
+            flash(f"Tu pedido #{new_order.id} ha sido creado. Ahora, por favor, introduce los detalles de tu pago.", "success")
+            return redirect(url_for("payment_form", order_id=new_order.id))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error al procesar el checkout: {e}", exc_info=True)
+            flash("Ocurrió un error al procesar tu pedido. Inténtalo de nuevo.", "danger")
+            return redirect(url_for("view_cart"))
+
+    return render_template(
+        "checkout.html",
+        cart_items=cart_items_details,
+        total_price=total_price,
+        active_page="checkout"
+    )
+
+@app.route("/payment_form/<int:order_id>", methods=["GET", "POST"])
+@login_required
+def payment_form(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    # Ensure the order belongs to the current user and is in the correct status
+    if order.user_id != current_user.id:
+        flash("No tienes permiso para acceder a esta orden.", "danger")
+        return redirect(url_for("home"))
+    
+    if order.status not in ['pending', 'payment_submitted']:
+        flash("Esta orden ya ha sido procesada o está en un estado no editable.", "warning")
+        return redirect(url_for("invoice", order_id=order.id))
+
+    if request.method == "POST":
+        reference_number = request.form.get("reference_number").strip()
+        if not reference_number:
+            flash("Por favor, introduce un número de referencia válido.", "danger")
+            return redirect(url_for("payment_form", order_id=order_id))
+        
+        # Check if reference number already exists in Payment to prevent duplicates
+        existing_payment_ref = Payment.query.filter_by(reference_number=reference_number).first()
+        if existing_payment_ref:
+            flash("Este número de referencia ya ha sido utilizado. Por favor, verifica o contacta a soporte.", "warning")
+            return redirect(url_for("payment_form", order_id=order_id))
+
+        try:
+            # Update order with payment reference
+            order.payment_reference = reference_number
+            order.status = 'payment_submitted' # Mark order as having payment submitted
+
+            # Create a new Payment record
+            new_payment = Payment(
+                order_id=order.id,
+                reference_number=reference_number,
+                amount=order.total_amount,
+                status='pending' # Payment is pending approval
+            )
+            db.session.add(new_payment)
+            db.session.commit()
+
+            flash("Número de referencia enviado exitosamente. Tu pago está pendiente de verificación.", "success")
+            return redirect(url_for("invoice", order_id=order.id))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error al registrar referencia de pago: {e}", exc_info=True)
+            flash("Ocurrió un error al procesar tu referencia de pago. Inténtalo de nuevo.", "danger")
+            return redirect(url_for("payment_form", order_id=order.id))
+
+    return render_template(
+        "payment_form.html",
+        order=order,
+        active_page="payment"
+    )
+
+@app.route("/invoice/<int:order_id>")
+@login_required
+def invoice(order_id):
+    order = Order.query.get_or_404(order_id)
+    if order.user_id != current_user.id and not is_accountant():
+        flash("No tienes permiso para ver esta factura.", "danger")
+        return redirect(url_for("home"))
+    
+    payment_details = Payment.query.filter_by(order_id=order.id).first()
+    
+    return render_template(
+        "invoice.html",
+        order=order,
+        items=order.items,
+        payment_details=payment_details,
+        active_page="invoice"
+    )
+
+@app.route("/my_invoices")
+@login_required
+def my_invoices():
+    # Fetch all orders for the current user
+    user_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.order_date.desc()).all()
+    
+    # Optionally fetch payment details for each order to display status
+    orders_with_details = []
+    for order in user_orders:
+        payment = Payment.query.filter_by(order_id=order.id).first()
+        orders_with_details.append({
+            "order": order,
+            "payment_status": payment.status if payment else 'No Payment Info'
+        })
+
+    return render_template(
+        "my_invoices.html",
+        orders=orders_with_details,
+        active_page="my_invoices"
+    )
+
+
+# ---- Rutas de Administrador (Accountant) ----
+@app.route("/admin/payments")
+@login_required
+@accountant_required
+def admin_payments():
+    # Get all pending payments
+    pending_payments = Payment.query.filter_by(status='pending').order_by(Payment.payment_date.asc()).all()
+    
+    # Get all approved/rejected payments for history
+    processed_payments = Payment.query.filter(Payment.status.in_(['approved', 'rejected'])).order_by(Payment.approval_date.desc()).limit(20).all() # Show last 20
+
+    return render_template(
+        "payment_approval.html",
+        pending_payments=pending_payments,
+        processed_payments=processed_payments,
+        active_page="admin_payments"
+    )
+
+@app.route("/admin/approve_payment/<int:payment_id>", methods=["POST"])
+@login_required
+@accountant_required
+def approve_payment(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    if payment.status == 'pending':
+        try:
+            payment.status = 'approved'
+            payment.approved_by = current_user.id
+            payment.approval_date = datetime.utcnow()
+            
+            # Update associated order status
+            order = Order.query.get(payment.order_id)
+            if order:
+                order.status = 'approved'
+                db.session.add(order)
+
+            db.session.add(payment)
+            db.session.commit()
+            flash(f"Pago de referencia '{payment.reference_number}' aprobado para el pedido #{payment.order_id}.", "success")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error al aprobar pago {payment_id}: {e}", exc_info=True)
+            flash("Ocurrió un error al aprobar el pago. Inténtalo de nuevo.", "danger")
+    else:
+        flash("Este pago ya ha sido procesado.", "warning")
+    
+    return redirect(url_for("admin_payments"))
+
+@app.route("/admin/reject_payment/<int:payment_id>", methods=["POST"])
+@login_required
+@accountant_required
+def reject_payment(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    if payment.status == 'pending':
+        try:
+            payment.status = 'rejected'
+            payment.approved_by = current_user.id # Record who rejected it
+            payment.approval_date = datetime.utcnow()
+            
+            # Optionally update associated order status
+            order = Order.query.get(payment.order_id)
+            if order:
+                order.status = 'cancelled' # Or 'payment_rejected'
+                flash(f"Pedido #{order.id} marcado como 'cancelado' debido a rechazo de pago.", "info")
+                db.session.add(order)
+
+            db.session.add(payment)
+            db.session.commit()
+            flash(f"Pago de referencia '{payment.reference_number}' rechazado para el pedido #{payment.order_id}.", "danger")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error al rechazar pago {payment_id}: {e}", exc_info=True)
+            flash("Ocurrió un error al rechazar el pago. Inténtalo de nuevo.", "danger")
+    else:
+        flash("Este pago ya ha sido procesado.", "warning")
+    
+    return redirect(url_for("admin_payments"))
 
 
 @app.route("/compare")

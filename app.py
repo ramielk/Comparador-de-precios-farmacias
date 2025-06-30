@@ -592,6 +592,7 @@ def reject_payment(payment_id):
 
 
 @app.route("/compare")
+@login_required
 def compare():
     pharmacies = Pharmacy.query.all()
     product1_id = request.args.get("product1", type=int)

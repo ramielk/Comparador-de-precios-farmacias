@@ -266,7 +266,7 @@ def add_cart_route(pharmacy_id, product_id):
 
 @app.route("/remove_from_cart/<int:pharmacy_id>/<int:product_id>", methods=["POST"])
 @login_requireddef
-remove_cart_route(pharmacy_id, product_id):
+def remove_cart_route(pharmacy_id, product_id):
     product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
     cart = session.get("cart", {})
     key = f"{pharmacy_id}:{product_id}"

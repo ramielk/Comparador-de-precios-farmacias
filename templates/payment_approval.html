@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+
+{% block title %}Aprobación de Pagos{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm rounded-lg">
+                <div class="card-body p-4">
+                    <h1 class="card-title text-center mb-3 text-primary">Panel de Aprobación de Pagos</h1>
+                    <p class="lead text-center text-muted">Gestiona los pagos pendientes de los usuarios.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-lg rounded-lg mb-5">
+                <div class="card-header bg-warning text-dark p-3 rounded-top-lg">
+                    <h5 class="mb-0"><i class="fas fa-hourglass-half me-2"></i>Pagos Pendientes de Aprobación</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th scope="col">ID Pedido</th>
+                                    <th scope="col">Referencia de Pago</th>
+                                    <th scope="col">Monto</th>
+                                    <th scope="col">Fecha de Envío</th>
+                                    <th scope="col">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in pending_payments %}
+                                <tr>
+                                    <td><a href="{{ url_for('invoice', order_id=payment.order_id) }}" class="text-primary fw-bold">#{{ payment.order_id }}</a></td>
+                                    <td>{{ payment.reference_number }}</td>
+                                    <td>${{ "%.2f"|format(payment.amount) }}</td>
+                                    <td>{{ payment.payment_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>
+                                        <form action="{{ url_for('approve_payment', payment_id=payment.id) }}" method="post" class="d-inline-block me-2">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-success btn-sm rounded-pill" title="Aprobar Pago"><i class="fas fa-check"></i> Aprobar</button>
+                                        </form>
+                                        <form action="{{ url_for('reject_payment', payment_id=payment.id) }}" method="post" class="d-inline-block">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger btn-sm rounded-pill" title="Rechazar Pago"><i class="fas fa-times"></i> Rechazar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success text-center m-4" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>No hay pagos pendientes de aprobación en este momento. ¡Todo listo!
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-lg rounded-lg">
+                <div class="card-header bg-info text-white p-3 rounded-top-lg">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos Procesados (Últimos 20)</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if processed_payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th scope="col">ID Pedido</th>
+                                    <th scope="col">Referencia</th>
+                                    <th scope="col">Monto</th>
+                                    <th scope="col">Estado</th>
+                                    <th scope="col">Aprobado Por</th>
+                                    <th scope="col">Fecha Aprobación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in processed_payments %}
+                                <tr class="{{ 'table-success' if payment.status == 'approved' else 'table-danger' }}">
+                                    <td><a href="{{ url_for('invoice', order_id=payment.order_id) }}" class="text-dark fw-bold">#{{ payment.order_id }}</a></td>
+                                    <td>{{ payment.reference_number }}</td>
+                                    <td>${{ "%.2f"|format(payment.amount) }}</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if payment.status == 'approved' else 'bg-danger' }}">
+                                            {{ payment.status.capitalize() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ payment.approver.username if payment.approver else 'N/A' }}</td>
+                                    <td>{{ payment.approval_date.strftime('%d/%m/%Y %H:%M') if payment.approval_date else 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-secondary text-center m-4" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>No hay historial de pagos procesados.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

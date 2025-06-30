@@ -1,114 +1,141 @@
 {% extends "layout.html" %}
 
-{% block title %}EcoFarmacia - {{ pharmacy.name }}{% endblock %}
+{% block title %}Farmacia - {{ pharmacy.name }}{% endblock %}
 
 {% block content %}
-<div class="pharmacy-header" style="border-bottom: 5px solid '{{ pharmacy.color }}';">
-    <div class="row align-items-end">
-        <div class="text-md-end">
-            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
-            </a>
+<div class="container py-4">
+    <div class="pharmacy-header text-center mb-5 p-4 rounded-lg shadow-sm" style="background-color: {{ pharmacy.color }}30;">
+        <div class="row align-items-center">
+            <div class="col-md-2">
+                <!-- Puedes usar el logo de la farmacia aquí si lo tienes dinámicamente -->
+                <img src="https://placehold.co/100x100/{{ pharmacy.color[1:] }}/ffffff?text={{ pharmacy.name[0] }}" 
+                     alt="{{ pharmacy.name }} Logo" class="img-fluid rounded-circle border border-primary border-3" style="max-height: 100px;">
+            </div>
+            <div class="col-md-8">
+                <h1 class="display-4 text-primary animate__animated animate__fadeInDown">{{ pharmacy.name }}</h1>
+                <p class="lead text-muted animate__animated animate__fadeInUp">Explora todos los productos disponibles en esta farmacia.</p>
+            </div>
+            <div class="col-md-2 text-md-end mt-3 mt-md-0">
+                <a href="{{ url_for('home') }}" class="btn btn-outline-secondary rounded-pill shadow-sm">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+                </a>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="card shadow-sm my-4">
-    <div class="card-body">
-        <form action="{{ url_for('pharmacy', pharmacy_id=pharmacy_id) }}" method="get" class="row g-3">
-            <div class="col-md-4">
-                <label for="category" class="form-label">Categoría</label>
-                <select name="category" id="category" class="form-select">
-                    <option value="">Todas las Categorías</option>
-                    {% for category in categories %}
-                    <option value="{{ category }}" {% if selected_category==category %}selected{% endif %}>{{ category
-                        }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+    <div class="card shadow-lg my-4 rounded-lg animate__animated animate__fadeIn">
+        <div class="card-body p-4">
+            <h4 class="card-title mb-3 text-primary"><i class="fas fa-filter me-2"></i>Filtros de Productos</h4>
+            <form action="{{ url_for('pharmacy', pharmacy_id=pharmacy_id) }}" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="category" class="form-label">Categoría</label>
+                    <select name="category" id="category" class="form-select rounded-pill">
+                        <option value="">Todas las Categorías</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if selected_category==category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="col-md-4">
-                <label for="search" class="form-label">Buscar</label>
-                <input type="text" name="search" id="search" class="form-control" placeholder="Buscar productos..."
-                    value="{{ search_query }}">
-            </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Buscar</label>
+                    <input type="text" name="search" id="search" class="form-control rounded-pill" placeholder="Buscar productos..."
+                        value="{{ search_query }}">
+                </div>
 
-            <div class="col-md-3">
-                <label for="availability" class="form-label">Disponibilidad</label>
-                <select name="availability" id="availability" class="form-select">
-                    <option value="">Todos los Productos</option>
-                    <option value="in_stock" {% if selected_availability=='in_stock' %}selected{% endif %}>En Stock
-                    </option>
-                    <option value="out_of_stock" {% if selected_availability=='out_of_stock' %}selected{% endif %}>
-                        Agotado</option>
-                </select>
-            </div>
+                <div class="col-md-3">
+                    <label for="availability" class="form-label">Disponibilidad</label>
+                    <select name="availability" id="availability" class="form-select rounded-pill">
+                        <option value="">Todos los Productos</option>
+                        <option value="in_stock" {% if selected_availability=='in_stock' %}selected{% endif %}>En Stock</option>
+                        <option value="out_of_stock" {% if selected_availability=='out_of_stock' %}selected{% endif %}>Agotado</option>
+                    </select>
+                </div>
 
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-filter"></i>
-                </button>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="col-12 mt-3 text-end">
+                <a href="{{ url_for('pharmacy', pharmacy_id=pharmacy_id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <i class="fas fa-times me-1"></i> Limpiar Filtros
+                </a>
             </div>
-        </form>
+        </div>
     </div>
-</div>
 
-<div class="row">
-    {% if pharmacy.products|length > 0 %}
-    {% for product in pharmacy.products %}
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm h-100 product-detail-card">
-            <div class="card-header" style="background-color: '{{ pharmacy.color }}'20;">
-                <h5 class="card-title mb-0">{{ product.name }}</h5>
-                <span class="category-badge">{{ product.category }}</span>
-            </div>
-            <div class="card-body">
-                <p class="card-text">{{ product.description }}</p>
-                <div class="product-info">
-                    <div class="info-item">
-                        <span class="label">Precio:</span>
-                        <span class="value price">${{ "%.2f"|format(product.price) }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">Unidad:</span>
-                        <span class="value">{{ product.unit }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">Estado:</span>
-                        <span class="value">
-                            {% if product.in_stock %}
-                            <span class="badge bg-success">En Stock ({{ product.stock_quantity }})</span>
-                            {% else %}
-                            <span class="badge bg-danger">Agotado</span>
-                            {% endif %}
-                        </span>
+    <h2 class="mt-5 mb-4 text-primary animate__animated animate__fadeInLeft"><i class="fas fa-box-open me-2"></i>Productos Disponibles</h2>
+    <div class="row">
+        {% if products|length > 0 %}
+        {% for product in products %}
+        <div class="col-lg-4 col-md-6 mb-4 animate__animated animate__fadeInUp">
+            <div class="card shadow-sm h-100 product-detail-card rounded-lg">
+                <div class="card-header bg-gradient-info text-white p-3 rounded-top-lg" style="background-color: {{ pharmacy.color }}30; color: {{ pharmacy.color }};">
+                    <h5 class="card-title mb-0 text-dark">{{ product.name }}</h5>
+                    <span class="badge bg-light text-dark category-badge mt-1">{{ product.category }}</span>
+                </div>
+                <div class="card-body d-flex flex-column p-3">
+                    <p class="card-text text-muted small mb-2">{{ product.description }}</p>
+                    <div class="product-info flex-grow-1">
+                        <div class="info-item border-bottom pb-2 mb-2">
+                            <span class="label">Precio:</span>
+                            <span class="value price">${{ "%.2f"|format(product.price) }}</span>
+                        </div>
+                        <div class="info-item border-bottom pb-2 mb-2">
+                            <span class="label">Unidad:</span>
+                            <span class="value">{{ product.unit }}</span>
+                        </div>
+                        <div class="info-item pb-0 mb-0">
+                            <span class="label">Stock:</span>
+                            <span class="value">
+                                {% if product.in_stock and product.stock_quantity > 0 %}
+                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>En Stock ({{ product.stock_quantity }})</span>
+                                {% else %}
+                                <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Agotado</span>
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="card-footer d-flex flex-column align-items-center">
-                {% if product1_id %}
-                {# Si ya hay un producto en comparación, este enlace añade el segundo #}
-                <a href="{{ url_for('compare', product1=product1_id, product2=product.id) }}"
-                    class="btn btn-outline-primary w-100 mb-2">
-                    <i class="fas fa-plus-circle me-2"></i>Añadir a Comparación
-                </a>
-                {% else %}
-                {# Si no hay comparación activa, este enlace inicia una nueva #}
-                <a href="{{ url_for('compare', product1=product.id) }}" class="btn btn-outline-primary w-100 mb-2">
-                    <i class="fas fa-balance-scale me-2"></i>Comparar con Otra Farmacia
-                </a>
-                {% endif %}
+                <div class="card-footer d-flex flex-column align-items-center p-3">
+                    <div class="d-flex w-100 justify-content-center mb-2 gap-2">
+                        <form action="{{ url_for('add_cart_route', pharmacy_id=pharmacy.id, product_id=product.id) }}" method="post" class="d-inline-block">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" title="Agregar al Carrito"><i class="fas fa-cart-plus me-1"></i> Agregar</button>
+                        </form>
+                        <form action="{{ url_for('remove_cart_route', pharmacy_id=pharmacy.id, product_id=product.id) }}" method="post" class="d-inline-block">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3" title="Quitar del Carrito"><i class="fas fa-minus me-1"></i> Quitar</button>
+                        </form>
+                    </div>
+                    {% if product1_id %}
+                    <a href="{{ url_for('compare', product1=product1_id, product2=product.id, pharmacy1=pharmacy1_id, pharmacy2=pharmacy_id) }}"
+                        class="btn btn-outline-primary w-100 rounded-pill mt-2">
+                        <i class="fas fa-plus-circle me-2"></i>Añadir a Comparación
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('compare', product1=product.id, pharmacy1=pharmacy_id) }}" class="btn btn-outline-primary w-100 rounded-pill mt-2">
+                        <i class="fas fa-balance-scale me-2"></i>Comparar con Otro Producto
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-    {% endfor %}
-    {% else %}
-    <div class="col-12">
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>No se encontraron productos que coincidan con tus criterios. Intenta
-            ajustar los filtros.
+        {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center p-4 rounded-lg shadow-sm animate__animated animate__fadeIn">
+                <i class="fas fa-box-open fa-2x mb-3 text-primary"></i>
+                <h4 class="alert-heading text-dark">No se encontraron productos que coincidan.</h4>
+                <p>Intenta ajustar los filtros de categoría, búsqueda o disponibilidad para ver más opciones.</p>
+                <a href="{{ url_for('pharmacy', pharmacy_id=pharmacy_id) }}" class="btn btn-info mt-3 rounded-pill">
+                    <i class="fas fa-undo me-2"></i>Restablecer Filtros
+                </a>
+            </div>
         </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 {% endblock %}

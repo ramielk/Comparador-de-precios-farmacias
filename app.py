@@ -35,12 +35,14 @@ logging.basicConfig(level=logging.DEBUG)
 # Create Flask app
 app = Flask(__name__)
 
+
+
 # ======================================================================
 # CONFIGURACIÓN DE SEGURIDAD PRINCIPAL
 # ======================================================================
 
 # Configuración de seguridad - CLAVE SECRETA
-app.config["SECRET_KEY"] = os.environ.get("SESSION_SECRET")
+app.config["SECRET_KEY"] = os.environ.get("SESSION_SECRET", "super-secret-key-default-for-dev") # Added a default for dev
 
 print(
     "Clave secreta configurada correctamente."
@@ -50,13 +52,13 @@ print(
 
 # Configuración de cookies seguras para protección adicional
 app.config.update(
-    SESSION_COOKIE_SECURE=False,  # Solo enviar cookies sobre HTTPS
-    SESSION_COOKIE_HTTPONLY=True,  # Prevenir acceso a cookies via JavaScript
-    SESSION_COOKIE_SAMESITE="Lax",  # Protección contra CSRF
-    PERMANENT_SESSION_LIFETIME=3600,  # 1 hora de duración de la sesión
+    SESSION_COOKIE_SECURE=False,  # Set to True in production with HTTPS
+    SESSION_COOKIE_HTTPONLY=True,  # Prevent JavaScript access to cookies
+    SESSION_COOKIE_SAMESITE="Lax",  # Protection against CSRF
+    PERMANENT_SESSION_LIFETIME=3600,  # 1 hour session duration
 )
 
-# Configurar la clave secreta para las sesiones
+# Configurar la clave secreta para las sesiones (redundant with app.config["SECRET_KEY"] but harmless)
 app.secret_key = os.environ.get("SESSION_SECRET", "clave-secreta-predeterminada")
 
 # Habilitar protección CSRF global
@@ -70,21 +72,22 @@ Talisman(
     content_security_policy={
         "default-src": "'self'",
         "style-src": ["'self'", "https://cdn.jsdelivr.net", "'unsafe-inline'"],
-        "script-src": ["'self'", "https://cdn.jsdelivr.net", "'unsafe-inline'"],
+        "script-src": ["'self'", "https://cdn.jsdelivr.net", "'unsafe-inline'"], # Allow inline scripts for now, consider nonces
         "font-src": ["'self'", "https://cdn.jsdelivr.net", "data:"],
         "img-src": [
             "'self'",
             "data:",
             "https://somoscomunidad.org.ve",
             "https://farmahorro.com.ve",
+            "https://placehold.co", # Added for placeholder images
         ],
     },
-    content_security_policy_nonce_in=["script-src"],
+    # content_security_policy_nonce_in=["script-src"], # Uncomment if using nonces in scripts
     frame_options="SAMEORIGIN",
     strict_transport_security=True,
-    force_https=False,  # Solo si estás detrás de un proxy HTTPS
-    session_cookie_http_only=True,  # CORRECCIÓN: http_only en lugar de httponly
-    session_cookie_secure=True,
+    force_https=False,  # Set to True in production with HTTPS
+    session_cookie_http_only=True,
+    session_cookie_secure=True, # Set to True in production with HTTPS
 )
 
 # Configurar protección contra fuerza bruta con Flask-Limiter
@@ -115,6 +118,10 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
+# ======================================================================
+# FUNCIONALIDAD DE LA APLICACIÓN
+# ======================================================================
+
 # Crear tablas en la base de datos SOLO si no existen
 with app.app_context():
     db.create_all()
@@ -126,11 +133,6 @@ with app.app_context():
         db.session.commit()
         logging.info("Accountant user created: accountant@example.com / password")
 
-# ======================================================================
-# FUNCIONALIDAD DE LA APLICACIÓN
-# ======================================================================
-
-
 # ---- Carrito de compras - Funciones de lógica ----
 def add_to_cart_logic(product_id, pharmacy_id):
     cart = session.get("cart", {})
@@ -140,7 +142,6 @@ def add_to_cart_logic(product_id, pharmacy_id):
     logging.debug(
         f"Producto {product_id} de farmacia {pharmacy_id} agregado. Carrito: {cart}"
     )
-
 
 def remove_from_cart_logic(product_id, pharmacy_id):
     cart = session.get("cart", {})
@@ -158,14 +159,13 @@ def remove_from_cart_logic(product_id, pharmacy_id):
             f"Intento de remover producto {product_id} de farmacia {pharmacy_id} que no está en el carrito."
         )
 
-
 def get_total_cart_items():
     cart = session.get("cart", {})
     return sum(cart.values())
-    
+
 def clear_cart():
     session["cart"] = {}
-    logging.debug("Carrito de la sesión vaciado.")    
+    logging.debug("Carrito de la sesión vaciado.")
 
 # ---- Funciones de utilidad para roles ----
 def is_accountant():
@@ -183,10 +183,10 @@ def accountant_required(f):
 
 from functools import wraps # Import wraps for decorators
 
-
 # ======================================================================
 # RUTAS DE LA APLICACIÓN
 # ======================================================================
+
 @app.context_processor
 def inject_now():
     return {'now': datetime.utcnow} 
@@ -196,16 +196,15 @@ def inject_now():
 @login_required
 def home():
     pharmacies = Pharmacy.query.all()
-    total_cart_items = get_total_cart_items()
     return render_template(
         "index.html",
         pharmacies=pharmacies,
         active_page="home",
-        total_cart_items=total_cart_items,
     )
 
 
 @app.route("/pharmacy/<int:pharmacy_id>")
+@login_required
 def pharmacy(pharmacy_id):
     pharmacy = Pharmacy.query.get_or_404(pharmacy_id)
     category = request.args.get("category", "")
@@ -254,6 +253,7 @@ def pharmacy(pharmacy_id):
 
 # Rutas del carrito
 @app.route("/add_to_cart/<int:pharmacy_id>/<int:product_id>", methods=["POST"])
+@login_required
 def add_cart_route(pharmacy_id, product_id):
     product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
     if product:
@@ -268,7 +268,7 @@ def add_cart_route(pharmacy_id, product_id):
 
 
 @app.route("/remove_from_cart/<int:pharmacy_id>/<int:product_id>", methods=["POST"])
-@login_requireddef
+@login_required
 def remove_cart_route(pharmacy_id, product_id):
     product = Product.query.filter_by(id=product_id, pharmacy_id=pharmacy_id).first()
     cart = session.get("cart", {})

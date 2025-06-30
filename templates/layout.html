@@ -13,38 +13,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
+    <!-- Animate.css para animaciones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/icon.png') }}">
     
-    <style>
-        .flash-messages {
-            margin-top: 1rem;
-        }
-        .flash {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        .flash.warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .flash.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .cart-badge {
-            font-size: 0.75em;
-            vertical-align: super;
-            margin-left: 5px;
-        }
-    </style>
-    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand mx-auto text-center w-100" href="{{ url_for('home') }}">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container-fluid px-md-5">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
                 <i class="fa-solid fa-pills me-2"></i>
-                Comparación de Inventario de Farmacias
+                FarmaciaFinder
             </a>
             {% if not hide_navbar_menu %}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,17 +65,40 @@
                     </li>
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <span class="nav-link">Hola, {{ current_user.username }}</span>
+                            <a class="nav-link {% if active_page == 'my_invoices' %}active{% endif %}" href="{{ url_for('my_invoices') }}">
+                                <i class="fas fa-receipt me-1"></i> Mis Pedidos
+                            </a>
                         </li>
+                        {% if current_user.role == 'accountant' %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                            <a class="nav-link {% if active_page == 'admin_payments' %}active{% endif %}" href="{{ url_for('admin_payments') }}">
+                                <i class="fas fa-user-shield me-1"></i> Aprobar Pagos
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i> Hola, {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                                <li><a class="dropdown-item" href="{{ url_for('my_invoices') }}"><i class="fas fa-receipt me-1"></i> Mis Pedidos</a></li>
+                                {% if current_user.role == 'accountant' %}
+                                <li><a class="dropdown-item" href="{{ url_for('admin_payments') }}"><i class="fas fa-user-shield me-1"></i> Aprobar Pagos</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión</a></li>
+                            </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">Iniciar Sesión</a>
+                            <a class="nav-link" href="{{ url_for('login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('register') }}">Registrarse</a>
+                            <a class="nav-link" href="{{ url_for('register') }}">
+                                <i class="fas fa-user-plus me-1"></i> Registrarse
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -106,7 +112,7 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
               {% if messages %}
                 {% for category, message in messages %}
-                  <div class="alert alert-{{ category }} flash">{{ message }}</div>
+                  <div class="alert alert-{{ category }} animate__animated animate__fadeInDown flash" role="alert">{{ message }}</div>
                 {% endfor %}
               {% endif %}
             {% endwith %}
@@ -114,10 +120,10 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer mt-auto py-3 bg-light">
+    <footer class="footer mt-auto py-3 bg-light border-top">
         <div class="container text-center">
             <span class="text-muted">
-                <i class="fa-solid fa-pills me-2"></i> Sistema de Comparación de Inventario de Farmacias
+                <i class="fa-solid fa-pills me-2"></i> FarmaciaFinder &copy; {{ now().year }}
             </span>
         </div>
     </footer>
